@@ -6,7 +6,8 @@
  *
  * 生成物（いずれも手編集禁止・コミット対象）:
  *   - tokens/tokens.css   :root(light) / .dark(dark) の CSS 変数
- *   - tokens/index.ts     JS/TS から値を参照するための型つきオブジェクト
+ *   - tokens/index.mjs    JS から値を参照するための実体（ESM）
+ *   - tokens/index.d.ts   その型定義
  *   - tailwind/preset.js  Tailwind v3 preset（CSS 変数を参照するだけの薄いアダプタ）
  *   - tailwind/v4.css     Tailwind v4 @theme inline（同上）
  *
@@ -81,11 +82,53 @@ function buildCss(entries, json) {
   ].join("\n");
 }
 
-function buildIndexTs(entries, json) {
+/**
+ * JS の実体（ESM）。git dependency で配布するため、消費側でのトランスパイルを前提にできない。
+ * TypeScript のまま配ると Next.js が node_modules を変換しないので落ちる。値は .mjs、型は .d.ts に分ける。
+ */
+function buildIndexMjs(entries, json) {
   const lines = entries.map((t) => {
     const dark = t.dark === null ? "null" : JSON.stringify(t.dark);
     const usage = t.usage ? ` /* ${t.usage.replace(/\*\//g, "")} */` : "";
     return `  ${JSON.stringify(t.name)}: { light: ${JSON.stringify(t.light)}, dark: ${dark} },${usage}`;
+  });
+
+  return `${banner("/**", " */")}
+export const tokens = {
+${lines.join("\n")}
+};
+
+/** 角丸の基準値 */
+export const radius = ${JSON.stringify(json.radius.value)};
+
+/** ダーク値が未定義のトークン一覧 */
+export const darkUnsupported = ${JSON.stringify(
+    entries.filter((t) => t.dark === null).map((t) => t.name),
+    null,
+    2
+  )};
+
+/** \`var(--background)\` のような CSS 変数参照を返す */
+export function cssVar(name) {
+  return \`var(--\${name})\`;
+}
+
+/**
+ * \`hsl(var(--background))\` を返す。インライン style や Tailwind の任意値ではなく、
+ * canvas 描画・グラフライブラリ等クラスが使えない箇所でのみ使うこと。
+ */
+export function hsl(name, alpha) {
+  return alpha === undefined ? \`hsl(var(--\${name}))\` : \`hsl(var(--\${name}) / \${alpha})\`;
+}
+`;
+}
+
+/** 型定義。値は index.mjs 側にあるので、ここは宣言のみ。 */
+function buildIndexDts(entries, json) {
+  const lines = entries.map((t) => {
+    const dark = t.dark === null ? "null" : JSON.stringify(t.dark);
+    const usage = t.usage ? ` /* ${t.usage.replace(/\*\//g, "")} */` : "";
+    return `  readonly ${JSON.stringify(t.name)}: { readonly light: ${JSON.stringify(t.light)}; readonly dark: ${dark} };${usage}`;
   });
 
   return `${banner("/**", " */")}
@@ -99,35 +142,27 @@ export interface TokenValue {
   readonly dark: HslComponents | null;
 }
 
-export const tokens = {
+export declare const tokens: {
 ${lines.join("\n")}
-} as const satisfies Record<string, TokenValue>;
+};
 
 /** CSS 変数名（先頭の -- を除いたもの）。例: "background" / "success-text" */
 export type TokenName = keyof typeof tokens;
 
 /** 角丸の基準値 */
-export const radius = ${JSON.stringify(json.radius.value)} as const;
+export declare const radius: ${JSON.stringify(json.radius.value)};
 
 /** ダーク値が未定義のトークン一覧 */
-export const darkUnsupported = ${JSON.stringify(
-    entries.filter((t) => t.dark === null).map((t) => t.name),
-    null,
-    2
-  ).replace(/\n/g, "\n")} as const satisfies readonly TokenName[];
+export declare const darkUnsupported: readonly TokenName[];
 
 /** \`var(--background)\` のような CSS 変数参照を返す */
-export function cssVar(name: TokenName): string {
-  return \`var(--\${name})\`;
-}
+export declare function cssVar(name: TokenName): string;
 
 /**
  * \`hsl(var(--background))\` を返す。インライン style や Tailwind の任意値ではなく、
  * canvas 描画・グラフライブラリ等クラスが使えない箇所でのみ使うこと。
  */
-export function hsl(name: TokenName, alpha?: number): string {
-  return alpha === undefined ? \`hsl(var(--\${name}))\` : \`hsl(var(--\${name}) / \${alpha})\`;
-}
+export declare function hsl(name: TokenName, alpha?: number): string;
 `;
 }
 
@@ -250,7 +285,8 @@ function main() {
   const { json, entries } = load();
   const outputs = [
     [join(ROOT, "tokens", "tokens.css"), buildCss(entries, json)],
-    [join(ROOT, "tokens", "index.ts"), buildIndexTs(entries, json)],
+    [join(ROOT, "tokens", "index.mjs"), buildIndexMjs(entries, json)],
+    [join(ROOT, "tokens", "index.d.ts"), buildIndexDts(entries, json)],
     [join(ROOT, "tailwind", "preset.js"), buildPreset(json)],
     [join(ROOT, "tailwind", "v4.css"), buildV4Css(json)],
   ];

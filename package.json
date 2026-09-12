@@ -8,7 +8,10 @@
     "url": "git+https://github.com/tech-plate/design-system.git"
   },
   "exports": {
-    ".": "./tokens/index.ts",
+    ".": {
+      "types": "./tokens/index.d.ts",
+      "default": "./tokens/index.mjs"
+    },
     "./tokens.css": "./tokens/tokens.css",
     "./tailwind-v4.css": "./tailwind/v4.css",
     "./preset": "./tailwind/preset.js"
@@ -27,8 +30,5 @@
   "devDependencies": {},
   "sideEffects": [
     "*.css"
-  ],
-  "publishConfig": {
-    "access": "restricted"
-  }
+  ]
 }

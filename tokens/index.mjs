@@ -4,16 +4,6 @@
  * `pnpm build`（node scripts/build-tokens.mjs）を実行し、`pnpm check` を通すこと。
  */
 
-/** HSL の成分文字列（例 "0 0% 100%"）。CSS では hsl() で包んで使う。 */
-export type HslComponents = string;
-
-export interface TokenValue {
-  /** ライトテーマの値 */
-  readonly light: HslComponents;
-  /** ダークテーマの値。null はダーク未対応（プロダクト側で定義する） */
-  readonly dark: HslComponents | null;
-}
-
 export const tokens = {
   "background": { light: "0 0% 100%", dark: "0 0% 3.9%" }, /* ページの地色 */
   "foreground": { light: "0 0% 3.9%", dark: "0 0% 98%" }, /* 既定の本文文字色 */
@@ -55,13 +45,10 @@ export const tokens = {
   "destructive-text": { light: "0 73.7% 41.8%", dark: null }, /* background に載せるエラー文言の前景色 */
   "destructive-surface": { light: "0 85.7% 97.3%", dark: null }, /* 薄い面。必ず surface-foreground とセットで使う */
   "destructive-surface-foreground": { light: "0 70% 35.3%", dark: null }, /* destructive-surface の上に載せる前景色 */
-} as const satisfies Record<string, TokenValue>;
-
-/** CSS 変数名（先頭の -- を除いたもの）。例: "background" / "success-text" */
-export type TokenName = keyof typeof tokens;
+};
 
 /** 角丸の基準値 */
-export const radius = "0.5rem" as const;
+export const radius = "0.5rem";
 
 /** ダーク値が未定義のトークン一覧 */
 export const darkUnsupported = [
@@ -84,10 +71,10 @@ export const darkUnsupported = [
   "destructive-text",
   "destructive-surface",
   "destructive-surface-foreground"
-] as const satisfies readonly TokenName[];
+];
 
 /** `var(--background)` のような CSS 変数参照を返す */
-export function cssVar(name: TokenName): string {
+export function cssVar(name) {
   return `var(--${name})`;
 }
 
@@ -95,6 +82,6 @@ export function cssVar(name: TokenName): string {
  * `hsl(var(--background))` を返す。インライン style や Tailwind の任意値ではなく、
  * canvas 描画・グラフライブラリ等クラスが使えない箇所でのみ使うこと。
  */
-export function hsl(name: TokenName, alpha?: number): string {
+export function hsl(name, alpha) {
   return alpha === undefined ? `hsl(var(--${name}))` : `hsl(var(--${name}) / ${alpha})`;
 }
