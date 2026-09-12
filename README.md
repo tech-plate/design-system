@@ -30,7 +30,7 @@ git dependency で直接インストールする（npm レジストリには pub
 pnpm add github:tech-plate/design-system#v0.1.0
 ```
 
-生成物（`tokens/tokens.css` `tokens/index.ts` `tailwind/preset.js` `tailwind/v4.css`）は
+生成物（`tokens/tokens.css` `tokens/index.mjs` `tokens/index.d.ts` `tailwind/preset.js` `tailwind/v4.css`）は
 **リポジトリにコミット済み**なので、インストール時にビルドは走らない（`prepare` スクリプトに依存しない）。
 ランタイム依存はゼロ。
 
@@ -142,8 +142,9 @@ hsl("interactive-solid", 0.5); // → "hsl(var(--interactive-solid) / 0.5)"
 tokens["success-text"].light;  // → "142 71.8% 29.2%"
 ```
 
-> ⚠️ エントリは **TypeScript のソース**（`tokens/index.ts`）をそのまま公開している。
-> Next.js から使う場合は `transpilePackages: ["@tech-plate/design-system"]` を設定すること。
+実体は素の ESM（`tokens/index.mjs`）＋型定義（`tokens/index.d.ts`）。
+git dependency では消費側のトランスパイルを前提にできないため、TypeScript のままでは配らない。
+`transpilePackages` の設定は不要。
 
 ## 利用できるクラス（抜粋）
 
@@ -181,7 +182,8 @@ rounded-lg  rounded-md  rounded-sm
 次のファイルは `tokens/tokens.json` からの**生成物**。直接編集しないこと（次回ビルドで消える）。
 
 - `tokens/tokens.css`
-- `tokens/index.ts`
+- `tokens/index.mjs`
+- `tokens/index.d.ts`
 - `tailwind/preset.js`
 - `tailwind/v4.css`
 
