@@ -34,6 +34,50 @@ pnpm add github:tech-plate/design-system#v0.1.0
 **リポジトリにコミット済み**なので、インストール時にビルドは走らない（`prepare` スクリプトに依存しない）。
 ランタイム依存はゼロ。
 
+### private リポジトリのため認証が要る
+
+このリポジトリは private なので、`git clone` できる認証情報が無い環境ではインストールが失敗する。
+環境ごとに次を用意する。
+
+**ローカル（mac）**
+
+`gh auth login` 済み、または SSH 鍵が GitHub に登録済みなら追加設定は不要。
+HTTPS で 403 になる場合は SSH 形式で指定する。
+
+```jsonc
+// package.json
+"@tech-plate/design-system": "git+ssh://git@github.com/tech-plate/design-system.git#v0.1.0"
+```
+
+**Docker（ローカル開発コンテナ）**
+
+コンテナには認証情報が無い。ホストの認証を渡すか、
+`~/.gitconfig` の `url.<...>.insteadOf` でトークン付き URL に書き換える。
+コンテナ内で `pnpm install` する構成なら、`GITHUB_TOKEN` を渡したうえで次を実行する。
+
+```sh
+git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
+```
+
+**Vercel**
+
+Vercel は「デプロイ対象のリポジトリ」しかクローン権限を持たないため、**他の private リポジトリへの
+git dependency は素のままでは失敗する**。プロジェクトの環境変数に read-only の
+Personal Access Token（または GitHub App のトークン）を `GITHUB_TOKEN` として登録し、
+Install Command を次のように上書きする。
+
+```sh
+git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/" && pnpm install
+```
+
+**GitHub Actions**
+
+同一 org 内の別リポジトリは `secrets.GITHUB_TOKEN` では読めない。
+org 用の PAT か GitHub App トークンを secret に登録して、上記と同じ `insteadOf` を設定する。
+
+> この手当てを消費側プロジェクトごとに1回ずつ入れる必要がある。
+> 運用が重くなるようなら、中身に秘密情報が無いので public 化を再検討してよい。
+
 ## 導入手順: Tailwind CSS v3
 
 ### 1. グローバル CSS でトークンを読み込む
