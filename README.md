@@ -21,6 +21,7 @@
 | [docs/spacing.md](./docs/spacing.md) | 4px グリッド 4 段の用途マップ |
 | [docs/components.md](./docs/components.md) | Button / Banner / Badge / Card / 確認ダイアログのルール、レビューチェックリスト |
 | [docs/navigation.md](./docs/navigation.md) | メニューをオブジェクトで組む原則、権限とスコープの扱い、階層の深さ |
+| [docs/writing.md](./docs/writing.md) | ラベル・説明文・エラー・ボタンの書き方、文体と句点の統一 |
 
 ## インストール
 
