@@ -110,6 +110,30 @@ solid はアイコン・ドット・インジケータ等の小面積オブジ�
   hover/focus で `text-foreground` + `bg-accent`。色を増やさず明度＋状態変化で操作可能を示す。
 - **disabled** は専用グレートークンを作らず、地色に `opacity`（≒50%）で表現する。
 
+### クラス名は文字列で完全に書く
+
+Tailwind は**ソースを静的に走査して、見つけたクラス名だけ**ユーティリティを生成する。
+クラス名をテンプレートリテラルや文字列連結で組み立てると走査に引っかからず、
+**エラーも警告も出ないまま無色で描画される**（v3 / v4 とも同じ挙動）。
+
+```tsx
+// NG: bg-warning-surface というクラスがソース上に存在しないので生成されない。
+//     背景が透明のまま、エラーも出ずに描画される
+<span className={`bg-${status}-surface text-${status}-surface-foreground`} />
+
+// OK: 完全なクラス名を定数から引く（§5 の状態色マップと同じ考え方）
+const STATUS_BADGE_CLASS = {
+  provisional: "bg-warning-surface text-warning-surface-foreground",
+  completed: "bg-success-surface text-success-surface-foreground",
+  cancelled: "bg-destructive-surface text-destructive-surface-foreground",
+} as const;
+
+<span className={STATUS_BADGE_CLASS[status]} />
+```
+
+トークンを正しく配っても、使う側がこの書き方を外すと黙って効かない。
+**新しいトークンを使い始めたときは、ブラウザで実際に色が乗っていることを必ず確認する。**
+
 ## 4. `interactive` と `info` を分ける
 
 色が似ていても役割が違うので、**押せるもの（`interactive`）と情報提示（`info`）は必ず別トークン**にする。
