@@ -22,6 +22,7 @@
 | [docs/components.md](./docs/components.md) | Button / Banner / Badge / Card / 確認ダイアログのルール、レビューチェックリスト |
 | [docs/navigation.md](./docs/navigation.md) | メニューをオブジェクトで組む原則、権限とスコープの扱い、階層の深さ |
 | [docs/writing.md](./docs/writing.md) | ラベル・説明文・エラー・ボタンの書き方、文体と句点の統一 |
+| [docs/forms.md](./docs/forms.md) | 1項目の構造、必須の示し方、エラー表示、検証タイミング、送信 |
 
 ## インストール
 
