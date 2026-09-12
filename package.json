@@ -1,0 +1,34 @@
+{
+  "name": "@tech-plate/design-system",
+  "version": "0.1.0",
+  "description": "全社共通のデザイントークン（CSS 変数）とデザインルール。Tailwind v3 / v4 の両方から参照できる薄いアダプタ付き。",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tech-plate/design-system.git"
+  },
+  "exports": {
+    ".": "./tokens/index.ts",
+    "./tokens.css": "./tokens/tokens.css",
+    "./tailwind-v4.css": "./tailwind/v4.css",
+    "./preset": "./tailwind/preset.js"
+  },
+  "files": [
+    "tokens",
+    "tailwind",
+    "docs",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build-tokens.mjs",
+    "check": "node scripts/check-contrast.mjs"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "sideEffects": [
+    "*.css"
+  ],
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

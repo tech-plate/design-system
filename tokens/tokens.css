@@ -1,0 +1,97 @@
+/**
+ * このファイルは tokens/tokens.json から自動生成されています。
+ * 手で編集しないこと。値を変えるときは tokens/tokens.json を編集して
+ * `pnpm build`（node scripts/build-tokens.mjs）を実行し、`pnpm check` を通すこと。
+ */
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 3.9%;
+  --primary: 0 0% 9%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 0 0% 96.1%;
+  --secondary-foreground: 0 0% 9%;
+  --muted: 0 0% 96.1%;
+  --muted-foreground: 0 0% 45.1%;
+  --accent: 0 0% 96.1%;
+  --accent-foreground: 0 0% 9%;
+  --border: 0 0% 89.8%;
+  --input: 0 0% 89.8%;
+  --ring: 0 0% 3.9%;
+  --interactive-text: 224 76.3% 48%;
+  --interactive-surface: 214 100% 96.9%;
+  --interactive-surface-foreground: 226 70.7% 40.2%;
+  --interactive-solid: 221 83.2% 53.3%;
+  --success-text: 142 71.8% 29.2%;
+  --success-surface: 138 76.5% 96.7%;
+  --success-surface-foreground: 143 64.2% 24.1%;
+  --success-solid: 142 71.8% 29.2%;
+  --warning-text: 26 90.5% 37.1%;
+  --warning-surface: 48 100% 96.1%;
+  --warning-surface-foreground: 23 82.5% 31.4%;
+  --warning-solid: 26 90.5% 37.1%;
+  --info-text: 201 96.3% 32.2%;
+  --info-surface: 204 100% 97.1%;
+  --info-surface-foreground: 201 90% 27.5%;
+  --info-solid: 201 96.3% 32.2%;
+  --inactive-surface: 220 14.3% 95.9%;
+  --inactive-surface-foreground: 215 13.8% 34.1%;
+  --destructive: 0 72.2% 50.6%;
+  --destructive-foreground: 0 0% 98%;
+  --destructive-text: 0 73.7% 41.8%;
+  --destructive-surface: 0 85.7% 97.3%;
+  --destructive-surface-foreground: 0 70% 35.3%;
+  --radius: 0.5rem;
+}
+
+/**
+ * ダークモード: `.dark` クラスを祖先に付けることで切り替える。
+ * 下記のトークンは light のみ定義（ダーク値が未策定）。ダーク画面では使わないか、
+ * プロダクト側で `.dark` に上書きを定義すること:
+ *   --interactive-text
+ *   --interactive-surface
+ *   --interactive-surface-foreground
+ *   --interactive-solid
+ *   --success-text
+ *   --success-surface
+ *   --success-surface-foreground
+ *   --success-solid
+ *   --warning-text
+ *   --warning-surface
+ *   --warning-surface-foreground
+ *   --warning-solid
+ *   --info-text
+ *   --info-surface
+ *   --info-surface-foreground
+ *   --info-solid
+ *   --destructive-text
+ *   --destructive-surface
+ *   --destructive-surface-foreground
+ */
+.dark {
+  --background: 0 0% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 0 0% 98%;
+  --primary-foreground: 0 0% 9%;
+  --secondary: 0 0% 14.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 14.9%;
+  --muted-foreground: 0 0% 63.9%;
+  --accent: 0 0% 14.9%;
+  --accent-foreground: 0 0% 98%;
+  --border: 0 0% 14.9%;
+  --input: 0 0% 14.9%;
+  --ring: 0 0% 83.1%;
+  --inactive-surface: 215 27.9% 16.9%;
+  --inactive-surface-foreground: 217.9 10.6% 64.9%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+}
