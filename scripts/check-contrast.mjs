@@ -13,8 +13,13 @@
  *   - 各 *-text          vs background
  *   - 各 *-surface-foreground vs 対応する *-surface
  *   - foreground / muted-foreground vs background
+ *   - muted-foreground vs muted
  *   - primary-foreground vs primary、destructive-foreground vs destructive
  * light / dark の両テーマを検証し、dark 値が null のトークンはスキップする。
+ *
+ * 上記に加えて、各 *-surface vs background を INFO 行として表示する（PASS/FAIL の
+ * 対象外・集計に含めない）。surface は非テキスト（面）で 4.5:1 の対象ではないため、
+ * 白との色差が目視で区別できる程度かを追うための参考値。
  */
 
 import { readFileSync } from "node:fs";
@@ -103,8 +108,22 @@ function buildPairs() {
   }
   add("foreground", "background");
   add("muted-foreground", "background");
+  add("muted-foreground", "muted");
   add("primary-foreground", "primary");
   add("destructive-foreground", "destructive");
+  return pairs;
+}
+
+/**
+ * 情報表示専用（FAIL にしない）: 各 *-surface が background と区別できる程度の
+ * 色差を持っているかを目視で追うための行。surface は非テキスト（面）なので
+ * 4.5:1 の AA 対象外。閾値も設けず、比の推移を確認する用途に限る。
+ */
+function buildSurfaceInfoPairs() {
+  const pairs = [];
+  for (const name of TOKENS.keys()) {
+    if (name.endsWith("-surface")) pairs.push({ fg: name, bg: "background" });
+  }
   return pairs;
 }
 
@@ -134,6 +153,23 @@ function run() {
     }
   }
 
+  // INFO 行: *-surface vs background。非テキストなので PASS/FAIL の対象外・集計にも含めない。
+  for (const theme of ["light", "dark"]) {
+    for (const { fg, bg } of buildSurfaceInfoPairs()) {
+      const fgValue = TOKENS.get(fg)?.[theme];
+      const bgValue = TOKENS.get(bg)?.[theme];
+      if (!fgValue || !bgValue) continue;
+      const ratio = contrastRatio(fgValue, bgValue);
+      rows.push({
+        theme,
+        pair: `${fg} on ${bg}`,
+        colors: `${toHex(toRgb(fgValue))} / ${toHex(toRgb(bgValue))}`,
+        ratio: ratio.toFixed(2),
+        result: "INFO",
+      });
+    }
+  }
+
   const width = (key, head) =>
     Math.max(head.length, ...rows.map((r) => String(r[key]).length));
   const cols = [
@@ -150,8 +186,9 @@ function run() {
   console.log(cols.map(([key, head]) => "-".repeat(width(key, head))).join("  "));
   for (const r of rows) console.log(line(cols.map(([key]) => r[key])));
 
+  const graded = rows.filter((r) => r.result !== "INFO").length;
   console.log(
-    `\n${rows.length - failed}/${rows.length} passed (AA >= ${AA_NORMAL}), ${skipped} skipped (dark 値が未定義)`
+    `\n${graded - failed}/${graded} passed (AA >= ${AA_NORMAL}), ${skipped} skipped (dark 値が未定義), ${rows.length - graded} INFO (非テキストの surface、AA 対象外)`
   );
 
   if (failed > 0) {
