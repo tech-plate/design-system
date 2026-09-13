@@ -51,12 +51,12 @@ blue / green / yellow を複数の意味に流用すると（リンクも情報�
 
 | 語彙 | text | surface / surface-foreground | solid | DEFAULT クラス |
 |------|------|------------------------------|-------|---------------|
-| `interactive` | ✅ (6.64) | ✅ (8.01) | ✅ (5.12) | `text-interactive` = text |
-| `success` | ✅ (5.02) | ✅ (6.81) | ✅ (5.02) | `text-success` = text |
-| `warning` | ✅ (5.02) | ✅ (6.78) | ✅ (5.02) | `text-warning` = text |
-| `info` | ✅ (5.87) | ✅ (7.09) | ✅ (5.87) | `text-info` = text |
-| `inactive` | — | ✅ (light 6.87 / dark 5.78) | — | なし |
-| `destructive` | ✅ (6.47) | ✅ (7.60) | `bg-destructive` (4.63) | `bg-destructive` = ベタ塗り面 |
+| `interactive` | ✅ (6.64) | ✅ (7.15) | ✅ (5.12) | `text-interactive` = text |
+| `success` | ✅ (5.02) | ✅ (6.49) | ✅ (5.02) | `text-success` = text |
+| `warning` | ✅ (5.02) | ✅ (6.32) | ✅ (5.02) | `text-warning` = text |
+| `info` | ✅ (7.18) | ✅ (9.56) | ✅ (7.18) | `text-info` = text |
+| `inactive` | — | ✅ (light 6.10 / dark 5.78) | — | なし |
+| `destructive` | ✅ (6.47) | ✅ (6.80) | `bg-destructive` (4.63) | `bg-destructive` = ベタ塗り面 |
 
 括弧内は実測コントラスト比。値は `tokens/tokens.json` の `contrast` フィールドが正。
 
@@ -138,6 +138,7 @@ const STATUS_BADGE_CLASS = {
 
 色が似ていても役割が違うので、**押せるもの（`interactive`）と情報提示（`info`）は必ず別トークン**にする。
 リンクと情報バッジが同じ青になって「押せるのか押せないのか分からない」状態を作らない。
+そのため `info` は cyan 系（hue 194）にして `interactive`（hue 224）と色相そのもので分けている。
 
 同じ理由で、**オブジェクトの塗りに `success` を使わない**。
 例えばカレンダー上の「予定が入っているブロック」の塗りは *実体が存在すること* を表しているのであって、

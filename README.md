@@ -177,6 +177,20 @@ import しているので、1 行で完結する。
 }
 ```
 
+### Tailwind 既定の上書き (フォント・行間・ブレークポイント)
+
+Tailwind v4 は `@theme` の変数を `:root` に出すので、消費側が `:root` に同名の
+`--font-sans` / `--leading-*` / `--breakpoint-*` を持つと読み込み順で勝った方が両方に効く。
+**`@theme { … }` で上書きし、`:root` に同名変数を書かない。**
+
+```css
+@theme {
+  --font-sans: "Inter", "Noto Sans JP", system-ui, sans-serif;
+  --leading-relaxed: 1.7;   /* 日本語本文 */
+  --breakpoint-sm: 480px;
+}
+```
+
 ## JS / TS からトークン値を参照する
 
 クラス名が使えない箇所（canvas 描画、グラフライブラリ等）でのみ使う。
