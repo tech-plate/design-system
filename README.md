@@ -16,11 +16,13 @@
 
 | ドキュメント | 内容 |
 |------------|------|
-| [docs/color.md](./docs/color.md) | トークンカタログ、3トーン体系、生カラー禁止、product layer の拡張方法 |
-| [docs/typography.md](./docs/typography.md) | Tailwind 標準スケールの用途マップ、mono の使いどころ |
-| [docs/spacing.md](./docs/spacing.md) | 4px グリッド 4 段の用途マップ |
-| [docs/components.md](./docs/components.md) | Button / Banner / Badge / Card / 確認ダイアログのルール、レビューチェックリスト |
-| [docs/navigation.md](./docs/navigation.md) | メニューをオブジェクトで組む原則、権限とスコープの扱い、階層の深さ |
+| [docs/design.md](./docs/design.md) | **入口**。読む順番、各 docs の索引、to B / to C で分かれるルール、新しいサービスを始める手順 |
+| [docs/color.md](./docs/color.md) | トークンカタログ（アイコン用グレー・favorite・LINE 公式色を含む）、3トーン体系、生カラー禁止、product layer の拡張方法 |
+| [docs/typography.md](./docs/typography.md) | フォント、Tailwind 標準スケールと行間の用途マップ、サイズの下限、段落間と行長、mono の使いどころ |
+| [docs/spacing.md](./docs/spacing.md) | 4px グリッド 4 段と縦長の画面用の大きい段（48 / 64px）の用途マップ |
+| [docs/layout.md](./docs/layout.md) | ブレークポイント、最大幅、ページの地色、z-index、タッチターゲット、暗幕、横スクロール |
+| [docs/components.md](./docs/components.md) | 部品ごとの仕様（variant・サイズ・状態）とルール、フォーカス表示、影、アイコン、レビューチェックリスト |
+| [docs/navigation.md](./docs/navigation.md) | メニューをオブジェクトで組む原則、権限とスコープの扱い、階層の深さ、スマホ向けナビ |
 | [docs/writing.md](./docs/writing.md) | ラベル・説明文・エラー・ボタンの書き方、文体と句点の統一 |
 | [docs/forms.md](./docs/forms.md) | 1項目の構造、必須の示し方、エラー表示、検証タイミング、送信 |
 
@@ -30,7 +32,7 @@ git dependency で直接インストールする（npm レジストリには pub
 **タグを必ず指定すること。**
 
 ```bash
-pnpm add github:tech-plate/design-system#v0.1.0
+pnpm add github:tech-plate/design-system#v0.6.0
 ```
 
 生成物（`tokens/tokens.css` `tokens/index.mjs` `tokens/index.d.ts` `tailwind/preset.js` `tailwind/v4.css`）は
@@ -49,7 +51,7 @@ HTTPS で 403 になる場合は SSH 形式で指定する。
 
 ```jsonc
 // package.json
-"@tech-plate/design-system": "git+ssh://git@github.com/tech-plate/design-system.git#v0.1.0"
+"@tech-plate/design-system": "git+ssh://git@github.com/tech-plate/design-system.git#v0.6.0"
 ```
 
 **Docker（ローカル開発コンテナ）**
@@ -129,7 +131,9 @@ const config: Config = {
 export default config;
 ```
 
-preset が提供するのは `darkMode: ["class"]` / `theme.extend.colors` / `theme.extend.borderRadius` のみ。
+preset が提供するのは `darkMode: ["class"]` / `theme.extend.colors` / `theme.extend.borderRadius` と、
+フォント・行間の上書き（`font-sans` = Noto Sans JP + システムフォールバック、`leading-relaxed` = 1.7、
+`leading-tight` = 1.3）のみ。
 **`content` と `plugins` は含まれていない。**
 
 ## 導入手順: Tailwind CSS v4
@@ -161,6 +165,7 @@ import しているので、1 行で完結する。
   — トークンが `.dark` クラスで切り替わる方式なので、v4 既定の `prefers-color-scheme` ベースではなく
   **クラスベースの `dark:` バリアント**に揃えている
 - `@theme inline` による `--color-*` / `--radius-*` の定義
+- `--font-sans`（Noto Sans JP + システムフォールバック）と `--leading-relaxed: 1.7` / `--leading-tight: 1.3` の上書き
 
 ### 2. プロダクト固有の色を足す
 
@@ -177,19 +182,23 @@ import しているので、1 行で完結する。
 }
 ```
 
-### Tailwind 既定の上書き (フォント・行間・ブレークポイント)
+### Tailwind 既定の上書き (フォント)
 
-Tailwind v4 は `@theme` の変数を `:root` に出すので、消費側が `:root` に同名の
-`--font-sans` / `--leading-*` / `--breakpoint-*` を持つと読み込み順で勝った方が両方に効く。
-**`@theme { … }` で上書きし、`:root` に同名変数を書かない。**
+フォント（`font-sans`）と行間（`leading-relaxed` / `leading-tight`）は **core が設定済み**なので、
+プロダクト側で書く必要はない（値は [docs/typography.md](./docs/typography.md)）。
+ブレークポイントは Tailwind 標準のまま使い、書き換えない（[docs/layout.md](./docs/layout.md)）。
+
+欧文用フォントを Noto Sans JP の前に足したいときだけ、プロダクト側で上書きする。
+Tailwind v4 は `@theme` の変数を `:root` に出すので、消費側が `:root` に同名の変数を持つと
+読み込み順で勝った方が両方に効く。**`@theme { … }` で上書きし、`:root` に同名変数を書かない。**
 
 ```css
 @theme {
   --font-sans: "Inter", "Noto Sans JP", system-ui, sans-serif;
-  --leading-relaxed: 1.7;   /* 日本語本文 */
-  --breakpoint-sm: 480px;
 }
 ```
+
+フォントファイルの配信（自前配信、`next/font` 等）は各プロダクトの責務。
 
 ## JS / TS からトークン値を参照する
 
@@ -215,16 +224,23 @@ bg-popover  text-popover-foreground
 bg-primary  text-primary-foreground  bg-secondary  text-secondary-foreground
 bg-muted  text-muted-foreground  bg-accent  text-accent-foreground
 border-border  border-input  ring-ring
+bg-overlay/50
+text-icon  text-icon-subtle  text-icon-strong  fill-icon-fill
 
 text-interactive  bg-interactive-surface  text-interactive-surface-foreground  bg-interactive-solid
+text-interactive-visited
 text-success      bg-success-surface      text-success-surface-foreground      bg-success-solid
 text-warning      bg-warning-surface      text-warning-surface-foreground      bg-warning-solid
 text-info         bg-info-surface         text-info-surface-foreground         bg-info-solid
+text-favorite     bg-favorite-surface     text-favorite-surface-foreground     bg-favorite-solid
                   bg-inactive-surface     text-inactive-surface-foreground
 bg-destructive  text-destructive-foreground
 text-destructive-text  bg-destructive-surface  text-destructive-surface-foreground
 
+bg-line  hover:bg-line-hover  text-line-foreground
+
 rounded-lg  rounded-md  rounded-sm
+font-sans  leading-relaxed  leading-tight
 ```
 
 `text-success` 等の接尾辞なしクラスは **text トーン**（`--success-text`）を指す。
@@ -235,7 +251,7 @@ rounded-lg  rounded-md  rounded-sm
 1. **`tokens/tokens.json` を編集する**
 2. `pnpm build`（= `node scripts/build-tokens.mjs`）で生成物を更新する
 3. **`pnpm check`（= `node scripts/check-contrast.mjs`）が通ることを確認する**
-   — WCAG 2.1 AA（4.5:1）未満のペアがあれば exit 1 になる
+   — WCAG 2.1 AA（テキスト 4.5:1、非テキスト 3:1）未満のペアがあれば exit 1 になる
 4. 生成物を含めてコミットし、**タグを切る**（消費側はタグを指して固定する）
 
 ### ⚠️ 手編集禁止
@@ -253,9 +269,13 @@ rounded-lg  rounded-md  rounded-sm
 `pnpm check` は light / dark 両テーマで次のペアを検証する（dark 値が無いトークンはスキップ）。
 
 - 各 `*-text` vs `background`
-- 各 `*-surface-foreground` vs 対応する `*-surface`
+- 各 `X-foreground` vs 対応する `X`（`X` が存在するもの。`*-surface-foreground` vs `*-surface`、`primary` / `secondary` / `muted` / `accent` / `card` / `popover` / `destructive` を含む）と、`X-hover` があれば `X-foreground` vs `X-hover`
 - `foreground` / `muted-foreground` vs `background`
-- `primary-foreground` vs `primary`、`destructive-foreground` vs `destructive`
+- `primary-foreground` vs 各 `*-solid`（白グリフを載せる前提のため）
+- `icon` / `icon-strong` vs `background`（非テキストの 3:1）
+
+`icon-subtle` / `icon-fill`（装飾専用）と `line-foreground` vs `line`（LINE のブランド規定）は検証から除外し、
+出力に除外理由を出す。`border` / `input`（白地 1.26）は検証対象に入れていない。
 
 任意の 2 色を調べることもできる。
 
@@ -276,6 +296,9 @@ node scripts/check-contrast.mjs "#ffffff" "142 71.8% 29.2%"
 - `destructive` 一式（`--destructive` `--destructive-foreground` `--destructive-text`
   `--destructive-surface` `--destructive-surface-foreground`）
 - `--radius`
+- 共通 UI の専用色（暗幕 `overlay`、アイコン用グレー `icon-subtle` / `icon` / `icon-strong` / `icon-fill`、
+  `favorite` 一式、`interactive-visited`、LINE 公式色 `line` / `line-hover` / `line-foreground`）
+- Tailwind 既定のうち日本語に合わせる上書き（`font-sans` / `leading-relaxed` / `leading-tight`）
 
 ### core に入れないもの（プロダクト側で定義する）
 
@@ -292,16 +315,19 @@ node scripts/check-contrast.mjs "#ffffff" "142 71.8% 29.2%"
 
 **ダークは部分対応。** 次のトークンには dark 値がある。
 
-- ニュートラル一式（`background` 〜 `ring`）
+- ニュートラル一式（`background` 〜 `ring`）と `overlay`
+- `line` / `line-hover` / `line-foreground`（公式色のため light と同じ値）
 - `inactive-surface` / `inactive-surface-foreground`
 - `destructive` / `destructive-foreground`
 
 **次のトークンには dark 値が無い**（`tokens.json` で `dark: null`、`tokens.css` の `.dark` に出力されない）。
 
-- `interactive-text` / `-surface` / `-surface-foreground` / `-solid`
+- `icon` / `icon-subtle` / `icon-strong` / `icon-fill`
+- `interactive-text` / `-surface` / `-surface-foreground` / `-solid` / `-visited`
 - `success-text` / `-surface` / `-surface-foreground` / `-solid`
 - `warning-text` / `-surface` / `-surface-foreground` / `-solid`
 - `info-text` / `-surface` / `-surface-foreground` / `-solid`
+- `favorite-text` / `-surface` / `-surface-foreground` / `-solid`
 - `destructive-text` / `destructive-surface` / `destructive-surface-foreground`
 
 これらを `.dark` 配下で使うと **light の値がそのまま適用され、コントラストが破綻する**。

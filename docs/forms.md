@@ -44,6 +44,7 @@ export function Field({
 | 必須マーク | ラベル直後の `*`（§3） |
 | 説明文 | 入力の**下**。補足情報なので、入力を妨げない位置に置く（§4） |
 | エラー | 入力の**下**。`text-sm text-destructive-text` |
+| 入力欄の文字 | **`text-base`（16px）固定**。iOS は 16px 未満の入力欄にフォーカスすると画面を拡大する（[typography.md](./typography.md)） |
 | 項目内の余白 | `space-y-2`（8px） |
 | 項目どうしの余白 | `space-y-4`（16px） |
 
