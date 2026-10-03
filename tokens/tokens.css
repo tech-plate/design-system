@@ -22,10 +22,16 @@
   --border: 0 0% 89.8%;
   --input: 0 0% 89.8%;
   --ring: 0 0% 3.9%;
+  --overlay: 0 0% 0%;
+  --icon-subtle: 0 0% 63.9%;
+  --icon: 0 0% 45.1%;
+  --icon-strong: 0 0% 32.2%;
+  --icon-fill: 0 0% 83.1%;
   --interactive-text: 224 76.3% 48%;
   --interactive-surface: 214 94.6% 92.7%;
   --interactive-surface-foreground: 226 70.7% 40.2%;
   --interactive-solid: 221 83.2% 53.3%;
+  --interactive-visited: 272.1 71.7% 47.1%;
   --success-text: 142 71.8% 29.2%;
   --success-surface: 141 84.5% 92.5%;
   --success-surface-foreground: 143 64.2% 24.1%;
@@ -40,11 +46,18 @@
   --info-solid: 194 69.6% 27.1%;
   --inactive-surface: 220 13% 91%;
   --inactive-surface-foreground: 215 13.8% 34.1%;
+  --favorite-text: 333.3 71.4% 47%;
+  --favorite-surface: 326 77.8% 94.7%;
+  --favorite-surface-foreground: 335.1 77.6% 42%;
+  --favorite-solid: 333.3 71.4% 47%;
   --destructive: 0 72.2% 50.6%;
   --destructive-foreground: 0 0% 98%;
   --destructive-text: 0 73.7% 41.8%;
   --destructive-surface: 0 93.3% 94.1%;
   --destructive-surface-foreground: 0 70% 35.3%;
+  --line: 150 94.3% 40.4%;
+  --line-hover: 150 94.4% 35.5%;
+  --line-foreground: 0 0% 100%;
   --radius: 0.5rem;
 }
 
@@ -52,10 +65,15 @@
  * ダークモード: `.dark` クラスを祖先に付けることで切り替える。
  * 下記のトークンは light のみ定義（ダーク値が未策定）。ダーク画面では使わないか、
  * プロダクト側で `.dark` に上書きを定義すること:
+ *   --icon-subtle
+ *   --icon
+ *   --icon-strong
+ *   --icon-fill
  *   --interactive-text
  *   --interactive-surface
  *   --interactive-surface-foreground
  *   --interactive-solid
+ *   --interactive-visited
  *   --success-text
  *   --success-surface
  *   --success-surface-foreground
@@ -68,6 +86,10 @@
  *   --info-surface
  *   --info-surface-foreground
  *   --info-solid
+ *   --favorite-text
+ *   --favorite-surface
+ *   --favorite-surface-foreground
+ *   --favorite-solid
  *   --destructive-text
  *   --destructive-surface
  *   --destructive-surface-foreground
@@ -90,8 +112,12 @@
   --border: 0 0% 14.9%;
   --input: 0 0% 14.9%;
   --ring: 0 0% 83.1%;
+  --overlay: 0 0% 0%;
   --inactive-surface: 215 27.9% 16.9%;
   --inactive-surface-foreground: 217.9 10.6% 64.9%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
+  --line: 150 94.3% 40.4%;
+  --line-hover: 150 94.4% 35.5%;
+  --line-foreground: 0 0% 100%;
 }

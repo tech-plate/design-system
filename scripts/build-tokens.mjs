@@ -8,19 +8,16 @@
  *   - tokens/tokens.css   :root(light) / .dark(dark) の CSS 変数
  *   - tokens/index.mjs    JS から値を参照するための実体（ESM）
  *   - tokens/index.d.ts   その型定義
- *   - tailwind/preset.js  Tailwind v3 preset（CSS 変数を参照するだけの薄いアダプタ）
- *   - tailwind/v4.css     Tailwind v4 @theme inline（同上）
+ *   - tailwind/preset.js  Tailwind v3 preset（CSS 変数を参照するだけの薄いアダプタ + typography）
+ *   - tailwind/v4.css     Tailwind v4 @theme inline（同上）+ typography 用の @theme
  *
  * git dependency で直接インストールされる前提のため、生成物はリポジトリにコミットする
  * （インストール時にビルドが走らなくても動くようにする）。
  */
 
-import { readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SOURCE = join(ROOT, "tokens", "tokens.json");
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { loadTokens, ownEntries, ROOT } from "./lib/tokens.mjs";
 
 const GENERATED_NOTE = [
   "このファイルは tokens/tokens.json から自動生成されています。",
@@ -28,26 +25,9 @@ const GENERATED_NOTE = [
   "`pnpm build`（node scripts/build-tokens.mjs）を実行し、`pnpm check` を通すこと。",
 ];
 
-/** @returns {{json: any, entries: {name: string, light: string, dark: string|null, usage?: string}[]}} */
-function load() {
-  const json = JSON.parse(readFileSync(SOURCE, "utf8"));
-  const entries = [];
-
-  for (const [name, def] of Object.entries(json.neutral)) {
-    entries.push({ name, group: "neutral", ...def });
-  }
-  for (const [group, tones] of Object.entries(json.semantic)) {
-    for (const [tone, def] of Object.entries(tones)) {
-      if (tone.startsWith("$")) continue;
-      entries.push({
-        name: tone === "DEFAULT" ? group : `${group}-${tone}`,
-        group,
-        tone,
-        ...def,
-      });
-    }
-  }
-  return { json, entries };
+/** typography の値を CSS の値文字列にする（font-sans は配列をカンマ区切りに） */
+function typographyValue(def) {
+  return Array.isArray(def.value) ? def.value.join(", ") : def.value;
 }
 
 function banner(commentOpen, commentClose) {
@@ -101,6 +81,13 @@ ${lines.join("\n")}
 /** 角丸の基準値 */
 export const radius = ${JSON.stringify(json.radius.value)};
 
+/** 文字まわりの既定（Tailwind の font-sans / leading-* を上書きする値）。キーは CSS 変数名 */
+export const typography = {
+${ownEntries(json.typography)
+  .map(([name, def]) => `  ${JSON.stringify(name)}: ${JSON.stringify(typographyValue(def))},`)
+  .join("\n")}
+};
+
 /** ダーク値が未定義のトークン一覧 */
 export const darkUnsupported = ${JSON.stringify(
     entries.filter((t) => t.dark === null).map((t) => t.name),
@@ -152,6 +139,13 @@ export type TokenName = keyof typeof tokens;
 /** 角丸の基準値 */
 export declare const radius: ${JSON.stringify(json.radius.value)};
 
+/** 文字まわりの既定（Tailwind の font-sans / leading-* を上書きする値）。キーは CSS 変数名 */
+export declare const typography: {
+${ownEntries(json.typography)
+  .map(([name, def]) => `  readonly ${JSON.stringify(name)}: ${JSON.stringify(typographyValue(def))};`)
+  .join("\n")}
+};
+
 /** ダーク値が未定義のトークン一覧 */
 export declare const darkUnsupported: readonly TokenName[];
 
@@ -167,31 +161,35 @@ export declare function hsl(name: TokenName, alpha?: number): string;
 }
 
 /** Tailwind の colors オブジェクト（v3 preset 用）を組み立てる */
-function buildTailwindColors(json) {
+function buildTailwindColors(entries, json) {
   const colors = {};
   const ref = (name) => `hsl(var(--${name}) / <alpha-value>)`;
 
-  const neutralNames = Object.keys(json.neutral);
-  for (const name of neutralNames) {
-    if (name.endsWith("-foreground")) {
-      const base = name.slice(0, -"-foreground".length);
-      if (neutralNames.includes(base)) continue; // base 側でまとめて出力する
+  // グループの出現順（lib/tokens.mjs の COLOR_SECTIONS 順）を保って束ねる
+  const groups = new Map();
+  for (const t of entries) groups.set(t.group, [...(groups.get(t.group) ?? []), t]);
+  for (const [group, members] of groups) {
+    if (members[0].tone === undefined) {
+      // neutral / external: 名前がフラットに並ぶ。X と X-foreground があれば 1 つにまとめる
+      const names = members.map((t) => t.name);
+      for (const name of names) {
+        if (name.endsWith("-foreground")) {
+          const base = name.slice(0, -"-foreground".length);
+          if (names.includes(base)) continue; // base 側でまとめて出力する
+        }
+        if (names.includes(`${name}-foreground`)) {
+          colors[name] = { DEFAULT: ref(name), foreground: ref(`${name}-foreground`) };
+        } else {
+          colors[name] = ref(name);
+        }
+      }
+      continue;
     }
-    if (neutralNames.includes(`${name}-foreground`)) {
-      colors[name] = { DEFAULT: ref(name), foreground: ref(`${name}-foreground`) };
-    } else {
-      colors[name] = ref(name);
-    }
-  }
-
-  for (const [group, tones] of Object.entries(json.semantic)) {
     const obj = {};
-    const fallbackTone = tones.$default;
-    for (const tone of Object.keys(tones)) {
-      if (tone.startsWith("$")) continue;
-      const varName = tone === "DEFAULT" ? group : `${group}-${tone}`;
+    const fallbackTone = json.semantic[group].$default;
+    for (const { name, tone } of members) {
       // $default で指定したトーンは DEFAULT に畳む（例: text-success = --success-text）
-      obj[tone === fallbackTone ? "DEFAULT" : tone] = ref(varName);
+      obj[tone === fallbackTone ? "DEFAULT" : tone] = ref(name);
     }
     colors[group] = obj;
   }
@@ -201,14 +199,28 @@ function buildTailwindColors(json) {
 function serialize(value, indent) {
   const pad = "  ".repeat(indent);
   if (typeof value === "string") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map((v) => JSON.stringify(v)).join(", ")}]`;
   const body = Object.entries(value)
     .map(([k, v]) => `${pad}  ${JSON.stringify(k)}: ${serialize(v, indent + 1)},`)
     .join("\n");
   return `{\n${body}\n${pad}}`;
 }
 
-function buildPreset(json) {
-  const colors = buildTailwindColors(json);
+/** v3 preset 用: typography を theme.extend.fontFamily / lineHeight に振り分ける */
+function buildTailwindTypography(json) {
+  const fontFamily = {};
+  const lineHeight = {};
+  for (const [name, def] of ownEntries(json.typography)) {
+    if (name.startsWith("font-")) fontFamily[name.slice("font-".length)] = def.value;
+    else if (name.startsWith("leading-")) lineHeight[name.slice("leading-".length)] = def.value;
+    else throw new Error(`typography.${name}: font-* / leading-* 以外は未対応`);
+  }
+  return { fontFamily, lineHeight };
+}
+
+function buildPreset(entries, json) {
+  const colors = buildTailwindColors(entries, json);
+  const { fontFamily, lineHeight } = buildTailwindTypography(json);
   return `${banner("/**", " */")}
 /**
  * Tailwind CSS v3 用 preset。
@@ -227,14 +239,16 @@ module.exports = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontFamily: ${serialize(fontFamily, 3)},
+      lineHeight: ${serialize(lineHeight, 3)},
     },
   },
 };
 `;
 }
 
-function buildV4Css(json) {
-  const colors = buildTailwindColors(json);
+function buildV4Css(entries, json) {
+  const colors = buildTailwindColors(entries, json);
   const lines = [];
   for (const [name, value] of Object.entries(colors)) {
     if (typeof value === "string") {
@@ -270,25 +284,36 @@ ${lines.join("\n")}
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
 }
+
+/*
+ * 文字まわりの既定。値そのものを持つので inline ではない通常の @theme にする。
+ * 消費側が後から書いた @theme { --font-sans: …; } が後勝ちで上書きできる。
+ * フォントファイルの配信は各プロダクトの責務（core は名前だけ指定する）。
+ */
+@theme {
+${ownEntries(json.typography)
+  .map(([name, def]) => `  --${name}: ${typographyValue(def)};`)
+  .join("\n")}
+}
 `;
 }
 
 /** グループの DEFAULT がどの CSS 変数を指すか */
 function defaultVarName(json, group) {
   const tones = json.semantic[group];
-  if (!tones) return group; // neutral（背景/前景ペア）は変数名＝グループ名
+  if (!tones) return group; // neutral / external（背景/前景ペア）は変数名＝グループ名
   const fallback = tones.$default;
   return !fallback || fallback === "DEFAULT" ? group : `${group}-${fallback}`;
 }
 
 function main() {
-  const { json, entries } = load();
+  const { json, entries } = loadTokens();
   const outputs = [
     [join(ROOT, "tokens", "tokens.css"), buildCss(entries, json)],
     [join(ROOT, "tokens", "index.mjs"), buildIndexMjs(entries, json)],
     [join(ROOT, "tokens", "index.d.ts"), buildIndexDts(entries, json)],
-    [join(ROOT, "tailwind", "preset.js"), buildPreset(json)],
-    [join(ROOT, "tailwind", "v4.css"), buildV4Css(json)],
+    [join(ROOT, "tailwind", "preset.js"), buildPreset(entries, json)],
+    [join(ROOT, "tailwind", "v4.css"), buildV4Css(entries, json)],
   ];
   for (const [path, content] of outputs) {
     writeFileSync(path, content, "utf8");

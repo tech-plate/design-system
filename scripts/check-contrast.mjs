@@ -8,28 +8,31 @@
  *   node scripts/check-contrast.mjs            # 全ペア検証（AA 未達があれば exit 1）
  *   node scripts/check-contrast.mjs <fg> <bg>  # 任意2色の比を表示（#hex または "H S% L%"）
  *
- * AA = 通常テキスト 4.5:1 / 大文字(>=18.66px または 14px bold) 3:1。
- * 検証するペア:
- *   - 各 *-text          vs background
- *   - 各 *-surface-foreground vs 対応する *-surface
+ * AA = 通常テキスト 4.5:1 / 大文字(>=18.66px または 14px bold) 3:1 / 非テキスト(1.4.11) 3:1。
+ * 検証するペア（4.5:1）:
+ *   - 各 *-text / *-visited vs background
+ *   - 各 X-foreground vs X（X が存在するもの。*-surface-foreground vs *-surface を含む）、
+ *     X-hover が存在すれば X-foreground vs X-hover も（line-foreground は exempt により除外。下記）
+ *   - 各 *-solid vs 白グリフ（primary-foreground の light 値 98%。light のみ）
  *   - foreground / muted-foreground vs background
- *   - muted-foreground vs muted
- *   - primary-foreground vs primary、destructive-foreground vs destructive
+ * 検証するペア（非テキスト 3:1）:
+ *   - nonText: true のトークン vs background（アイコン）
  * light / dark の両テーマを検証し、dark 値が null のトークンはスキップする。
+ *
+ * 除外（EXEMPT 行。PASS/FAIL の集計に含めない）は黙ってスキップせず、理由を出力する:
+ *   - decorative: true のトークン（装飾専用。非テキスト 3:1 の対象外）
+ *   - exempt に理由を持つ前景トークン（外部サービスのブランド規定による色など）
+ * border / input は値を変えると全プロダクトの見た目が変わるため、現時点では 3:1 の対象に入れない。
  *
  * 上記に加えて、各 *-surface vs background を INFO 行として表示する（PASS/FAIL の
  * 対象外・集計に含めない）。surface は非テキスト（面）で 4.5:1 の対象ではないため、
  * 白との色差が目視で区別できる程度かを追うための参考値。
  */
 
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { loadTokens } from "./lib/tokens.mjs";
 
 const AA_NORMAL = 4.5;
-
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const json = JSON.parse(readFileSync(join(ROOT, "tokens", "tokens.json"), "utf8"));
+const NON_TEXT = 3;
 
 /** "H S% L%" → {r,g,b} (0-255) */
 function hslToRgb(components) {
@@ -81,37 +84,36 @@ export function contrastRatio(a, b) {
 }
 
 /** CSS 変数名 → トークン定義 */
-function flatten() {
-  const map = new Map();
-  for (const [name, def] of Object.entries(json.neutral)) map.set(name, def);
-  for (const [group, tones] of Object.entries(json.semantic)) {
-    for (const [tone, def] of Object.entries(tones)) {
-      if (tone.startsWith("$")) continue;
-      map.set(tone === "DEFAULT" ? group : `${group}-${tone}`, def);
-    }
-  }
-  return map;
-}
-
-const TOKENS = flatten();
+const TOKENS = new Map(loadTokens().entries.map((t) => [t.name, t]));
 
 /** 検証ペアを tokens.json から組み立てる */
 function buildPairs() {
   const pairs = [];
-  const add = (fg, bg) => pairs.push({ fg, bg });
+  const add = (fg, bg, opts = {}) => pairs.push({ fg, bg, min: AA_NORMAL, ...opts });
 
-  for (const name of TOKENS.keys()) {
-    if (name.endsWith("-text")) add(name, "background");
-    if (name.endsWith("-surface-foreground")) {
-      add(name, name.replace(/-foreground$/, ""));
+  for (const [name, def] of TOKENS) {
+    if (name.endsWith("-text") || name.endsWith("-visited")) add(name, "background");
+    // X-foreground は X（と X-hover）に載せる文字色。名前を直書きせず、対応する面があれば必ず検証する
+    // （外部ブランド色を足したときの書き忘れで黙って漏れないようにする）
+    if (name.endsWith("-foreground")) {
+      const base = name.slice(0, -"-foreground".length);
+      for (const bg of [base, `${base}-hover`]) if (TOKENS.has(bg)) add(name, bg);
     }
+    // solid は白グリフを載せる前提。core の白グリフ（primary-foreground の light 値 98%）で測る。
+    // dark の primary-foreground は暗色なので light のみ
+    if (name.endsWith("-solid")) add("primary-foreground", name, { themes: ["light"] });
+    if (def.nonText) add(name, "background", { min: NON_TEXT });
   }
   add("foreground", "background");
   add("muted-foreground", "background");
-  add("muted-foreground", "muted");
-  add("primary-foreground", "primary");
-  add("destructive-foreground", "destructive");
   return pairs;
+}
+
+/** 除外理由（null なら検証対象）。decorative / exempt はどちらも前景トークンにだけ書く */
+function exemptReason(fg) {
+  const fgDef = TOKENS.get(fg);
+  if (fgDef?.decorative) return `装飾専用（${fg} は decorative。非テキスト 3:1 の対象外）`;
+  return fgDef?.exempt ?? null;
 }
 
 /**
@@ -129,11 +131,11 @@ function buildSurfaceInfoPairs() {
 
 function run() {
   const rows = [];
-  let failed = 0;
   let skipped = 0;
 
   for (const theme of ["light", "dark"]) {
-    for (const { fg, bg } of buildPairs()) {
+    for (const { fg, bg, min, themes } of buildPairs()) {
+      if (themes && !themes.includes(theme)) continue;
       const fgValue = TOKENS.get(fg)?.[theme];
       const bgValue = TOKENS.get(bg)?.[theme];
       if (!fgValue || !bgValue) {
@@ -141,14 +143,14 @@ function run() {
         continue;
       }
       const ratio = contrastRatio(fgValue, bgValue);
-      const ok = ratio >= AA_NORMAL;
-      if (!ok) failed++;
+      const reason = exemptReason(fg);
       rows.push({
         theme,
         pair: `${fg} on ${bg}`,
         colors: `${toHex(toRgb(fgValue))} / ${toHex(toRgb(bgValue))}`,
         ratio: ratio.toFixed(2),
-        result: ok ? "PASS" : "FAIL",
+        result: reason ? "EXEMPT" : ratio >= min ? "PASS" : "FAIL",
+        note: reason ? `除外: ${reason}` : min === NON_TEXT ? `非テキスト ${NON_TEXT}:1` : "",
       });
     }
   }
@@ -166,6 +168,7 @@ function run() {
         colors: `${toHex(toRgb(fgValue))} / ${toHex(toRgb(bgValue))}`,
         ratio: ratio.toFixed(2),
         result: "INFO",
+        note: "",
       });
     }
   }
@@ -178,17 +181,20 @@ function run() {
     ["pair", "PAIR"],
     ["colors", "COLORS"],
     ["ratio", "RATIO"],
+    ["note", "NOTE"],
   ];
   const line = (cells) =>
-    cells.map((cell, i) => String(cell).padEnd(width(cols[i][0], cols[i][1]))).join("  ");
+    cells.map((cell, i) => String(cell).padEnd(width(cols[i][0], cols[i][1]))).join("  ").trimEnd();
 
   console.log(line(cols.map(([, head]) => head)));
   console.log(cols.map(([key, head]) => "-".repeat(width(key, head))).join("  "));
   for (const r of rows) console.log(line(cols.map(([key]) => r[key])));
 
-  const graded = rows.filter((r) => r.result !== "INFO").length;
+  const count = (result) => rows.filter((r) => r.result === result).length;
+  const failed = count("FAIL");
+  const graded = count("PASS") + failed;
   console.log(
-    `\n${graded - failed}/${graded} passed (AA >= ${AA_NORMAL}), ${skipped} skipped (dark 値が未定義), ${rows.length - graded} INFO (非テキストの surface、AA 対象外)`
+    `\n${count("PASS")}/${graded} passed (テキスト AA >= ${AA_NORMAL} / 非テキスト >= ${NON_TEXT}), ${skipped} skipped (dark 値が未定義), ${count("EXEMPT")} EXEMPT (除外。理由は NOTE), ${count("INFO")} INFO (非テキストの surface、AA 対象外)`
   );
 
   if (failed > 0) {
