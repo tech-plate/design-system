@@ -13,11 +13,16 @@
 
 ### 仕様表の読み方
 
+- 部品の内側の余白は仕様表が正（[spacing.md](./spacing.md) §3 の例外）。
+
 - 「クラス」列は**完全なクラス名**で書く。状態や variant ごとに完全な文字列を持ち、
   テンプレートリテラルで組み立てない（[color.md](./color.md) の「クラス名は文字列で完全に書く」）。
 - 状態で同じプロパティを切り替えるとき（`border-input` ⇄ `border-destructive` 等）は、
   **既定のクラスに足すのではなく置き換える**。同じプロパティのクラスが 2 つ乗ると、
   どちらが勝つかは記述順ではなく生成された CSS の順で決まり、黙って効かなくなる。
+- 仕様表にある**部品の内側の余白**（内側 padding の `px-3`、アイコン位置合わせの `mt-0.5`、
+  EmptyState・ErrorState・ダイアログ・PageHeader 内部の `mt-*` / `mb-*` 等）は、この表が正。
+  [spacing.md](./spacing.md) の 5 段と「子に `mt-*` / `mb-*` を付けない」は画面を組む側のルールで、部品の内側には当てない。
 
 ---
 
@@ -31,6 +36,7 @@
 |------|--------|
 | ボタン・チップ・タブ・アイコンボタン・ボタン型のリンク | `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2` |
 | 入力欄（Input / Textarea / Select）・Checkbox | `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring` |
+| エラー中の入力欄（`aria-invalid="true"` の Input / Textarea / Select） | 上の入力欄のクラス + `aria-[invalid=true]:focus-visible:ring-destructive` |
 
 - リングは **2px（`ring-2`）、色は `ring-ring`**。生カラー（`ring-blue-500` 等）にしない。
 - **`outline-none` だけで消さない。** ブラウザ既定の outline を消すときは、必ず上のリングを代わりに付ける。
@@ -38,6 +44,9 @@
 - ボタン類は **`ring-offset-2`** で塗りとリングの間に 2px の隙間を空ける。
   塗り（`bg-primary` 等）とリングが同じ暗さで接すると、リングがボタンの縁と一体化してフォーカスの有無が判別できない。
 - 入力欄は offset を付けない。枠線のすぐ外にリングが乗る方が、どの欄に入力しているかが分かりやすい。
+- **エラー中の入力欄はリングも `ring-destructive` にする。** 枠だけ赤くてリングが通常色だと、フォーカスした途端に
+  エラーの手がかりが弱まる。`aria-[invalid=true]:` は属性セレクタの分だけ詳細度が高く、`ring-ring` と併記しても必ず勝つ
+  （Tailwind v3.2+ / v4）。このため「置き換える」の例外とする。
 - **フォーカスインジケーターは、隣接する色に対して 3:1 以上**にする（DADS の基準）。
   `ring-ring` は `bg-background` / `bg-card` / `bg-muted` のいずれの上でも 3:1 を満たす。
   これ以外の暗い面の上に部品を置く場合は、その面で 3:1 を実測する。
@@ -58,7 +67,7 @@
 |----|--------|------|
 | なし | — | Card・パネル・Button・入力部品・Badge・Tabs・固定／追従するヘッダーとタブバー |
 | 1. メニュー・ポップオーバー | `shadow-md` | ドロップダウンメニュー、ポップオーバー、入力候補のリスト、ツールチップ |
-| 2. モーダル・ダイアログ | `shadow-lg` | Modal、確認ダイアログ、トースト |
+| 2. モーダル・ダイアログ | `shadow-lg` | Modal、確認ダイアログ、トースト（§9） |
 
 - 段は 2 つだけ。`shadow-sm` / `shadow-xl` / `shadow-2xl` / 任意値（`shadow-[...]`）は使わない。
   段が増えると、どれがどれより手前にあるのかが読み取れなくなる。
@@ -77,7 +86,7 @@
 
 | サイズ | クラス | 使う場面 |
 |--------|--------|---------|
-| 16px | `size-4` | `text-xs` / `text-sm` の文字と並べるアイコン（メタ情報の日付、戻るリンクの矢印、Alert のアイコン、Badge の中、`text-sm` のリンク末尾の矢印）、外部リンクのアイコン |
+| 16px | `size-4` | `text-xs` / `text-sm` の文字と並べるアイコン（メタ情報の日付、戻るリンクの矢印、Alert・トーストのアイコン、Badge の中、`text-sm` のリンク末尾の矢印）、外部リンクのアイコン |
 | 20px | `size-5` | `text-base` の文字と並べるアイコン（リスト行の先頭、行末の矢印、`md` の Button の中）、ボトムタブバー |
 | 24px | `size-6` | ヘッダーのアイコンボタン（戻る・閉じる・右端の操作） |
 
@@ -144,8 +153,9 @@
   同じ操作の呼び方が画面ごとにズレる。ローディング中の文言（「保存中...」）も同じ定数群に置く。
 - **主要アクションの塗りは `primary` のみ。** 色つきベタ塗りボタン（緑の成功ボタン等）は作らない
   （[color.md](./color.md) の「solid はベタ塗りボタンではない」）。
-- 破壊的アクションだけが `destructive` の塗りを使ってよい。
+- 破壊的アクションだけが `destructive` の塗りを使ってよい。LINE に関わる操作は `line` の塗り（§2-2）。
 - 1 つの画面・1 つのダイアログに主要アクション（塗りボタン）は 1 つ。残りは secondary / outline / ghost。
+  - `line` も塗りなのでこのルールと重なる。LINE ボタンを置く画面では、`primary` との優先順位をプロダクト側で決める。
 - 遷移するだけのボタンは `<a>`（リンク）として描画し、見た目は Button と同じにする。
 
 ### 2-2. 仕様
@@ -159,9 +169,9 @@
 | `outline` | キャンセル・補助的な操作 | `border border-input bg-card text-foreground` | `hover:bg-accent hover:text-accent-foreground` |
 | `ghost` | 面の上で目立たせたくない操作 | `border-0 bg-transparent text-foreground` | `hover:bg-accent hover:text-accent-foreground` |
 | `destructive` | 削除・取り消しなど元に戻せない操作 | `border-0 bg-destructive text-destructive-foreground` | `hover:bg-destructive/90` |
-| `line` | LINE ログイン・LINE 友だち追加の導線だけ | `border-0 bg-line text-line-foreground` | `hover:bg-line-hover` |
+| `line` | LINE に関わる操作（LINE ログイン・友だち追加など）。どの場面で使うかはプロダクトごとに決める | `border-0 bg-line text-line-foreground` | `hover:bg-line-hover` |
 
-> `line` は LINE 公式のブランド規定色。汎用の緑として他の操作に転用しない。
+> `line` は LINE 公式のブランド規定色。LINE と関係のない操作に汎用の緑として転用しない。
 
 | size | 高さ | 左右 padding | 文字 | 使う場面 |
 |------|------|-------------|------|---------|
@@ -205,6 +215,7 @@
 | focus-visible | §1-1 の入力欄のリング |
 | disabled | `disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground` |
 | エラー | 枠を `border-input` から **`border-destructive` に置き換え**、`aria-invalid="true"` を付ける。エラー文は [forms.md](./forms.md) |
+| エラー中の focus-visible | リングを `ring-destructive` にする（§1-1 のエラー中の入力欄） |
 
 | 部品 | 固有の規定 |
 |------|-----------|
@@ -339,7 +350,7 @@
 | 項目 | クラス |
 |------|--------|
 | 面 | `rounded-lg border border-border bg-card` |
-| padding `md`（既定） | `p-6` |
+| padding `md`（既定） | `p-4 md:p-6`（スマホ 16px、`md` 以上 24px） |
 | padding `sm` | `p-4`（情報密度の高い小さなカード、一覧の 1 件） |
 | padding `none` | なし（中で区画ごとに padding を持つとき） |
 
@@ -480,7 +491,7 @@
 
 | variant | 外枠の padding・面 | 使う場面 |
 |---------|-------------------|---------|
-| `page`（既定） | `px-4 py-12` | 一覧ページ全体が 0 件 |
+| `page`（既定） | `px-4 py-8` | 一覧ページ全体が 0 件 |
 | `card` | `px-4 py-6 rounded-lg bg-muted` | カードの外のセクション内 |
 | `plain` | `px-4 py-6` | カードの中の節 |
 
@@ -492,14 +503,55 @@ EmptyState と対になる部品。体裁を揃える。
 
 | 要素 | クラス・規定 |
 |------|------------|
-| 外枠 | `px-4 py-12 text-center text-muted-foreground`、`role="alert"` |
+| 外枠 | `px-4 py-8 text-center text-muted-foreground`、`role="alert"` |
 | アイコン | 警告の三角形。32px（`size-8`）、`text-destructive-text`、`aria-hidden="true"`。下に `mb-4` |
 | メッセージ | `text-base break-words`。文言は [writing.md](./writing.md) |
 | 行動 | `mt-6 flex flex-wrap items-center justify-center gap-2`。再試行できるなら「再読み込み」（`outline`）、認証切れなら「ログイン」（`primary`）。サイズは `md` |
 
 ---
 
-## 9. FilterChip（一覧の絞り込み）
+## 9. Toast（操作完了の通知）
+
+### 9-1. ルール
+
+- **操作が完了したことを短く知らせるときだけ**使う（「保存しました」「コピーしました」）。
+- トーストは自動で消える。そのため**閉じるボタン（×）は付けず**、**対応が必要なエラー・入力エラー**や
+  後から見返す必要がある情報をトーストだけに載せない（読み逃し、どこを直すかも示せない）。
+  操作の失敗は Alert（§4）、入力エラーはフィールドのエラー（[forms.md](./forms.md)）で出す。
+- **同時に出すのは 1 件。** 新しいトーストが来たら、表示中のものを置き換える（積み重ねない）。
+
+### 9-2. 仕様
+
+| 項目 | クラス・規定 |
+|------|------------|
+| 箱 | `flex items-start gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm text-card-foreground shadow-lg` |
+| 位置（`lg` 未満・タブバーのある画面） | `fixed inset-x-4 bottom-[calc(var(--tabbar-offset)+1rem)]`（タブバーの上端から 16px、左右 16px） |
+| 位置（`lg` 未満・タブバーの無い画面） | `fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))]`（`bottom-4` + safe-area） |
+| 位置（`lg` 以上） | `lg:left-auto lg:right-6 lg:bottom-6 lg:w-full lg:max-w-sm`（右下） |
+| 重なり | **layout.md のトーストの層**（モーダルより上） |
+| アイコン | 左に種類のアイコン。16px（`size-4`）、`mt-0.5 shrink-0`、`aria-hidden="true"`。色は Alert と同じく solid（下表） |
+| 本文 | `min-w-0 flex-1` |
+| アクション（任意） | 「元に戻す」等。本文の右に置き、押せる領域は 44px（§1-2） |
+
+| 種類 | アイコンの色 | 使う場面 |
+|------|-------------|---------|
+| `success`（既定） | `text-success-solid` | 保存・送信・削除などの完了 |
+| `info` | `text-info-solid` | 完了以外の短いお知らせ |
+
+`--tabbar-offset` はプロダクト側の CSS で定義する（[navigation.md](./navigation.md) §11-3）。
+
+**振る舞い**
+
+| 項目 | 規定 |
+|------|------|
+| 表示時間 | **5 秒**。アクション付きは **8 秒** |
+| 一時停止 | hover 中・フォーカスが中にある間はタイマーを止め、離れたら再開する |
+| ロール | `role="status"`。`role="status"` を持つ要素は常に DOM に置き、中のトーストだけを出し入れする（ロールごと後から足すと読み上げられないことがある） |
+| 出るとき | 下から（`translate-y-2` → 0）フェードイン、150ms。`prefers-reduced-motion` ではフェードだけ（移動しない） |
+
+---
+
+## 10. FilterChip（一覧の絞り込み）
 
 一覧の上に並べる、**単一選択**の絞り込みトグル。選択中の chip は「いま何を見ているか」を示す状態表示なので、
 §2 の「塗りの主要アクションは 1 画面に 1 つ」とは別枠として扱う。
@@ -521,7 +573,7 @@ EmptyState と対になる部品。体裁を揃える。
 
 ---
 
-## 10. PageHeader（ページ見出し）
+## 11. PageHeader（ページ見出し）
 
 | 要素 | クラス・規定 |
 |------|------------|
@@ -533,11 +585,17 @@ EmptyState と対になる部品。体裁を揃える。
 **見出しを画面に出さないページ**: ボトムタブバーの各タブ直下のページは、いまどのタブにいるかを
 タブバーが示している。同じ語を大きく繰り返すと一覧の上が空くだけなので、**`<h1>` を `sr-only` で残して視覚的にだけ隠す**。
 `<h1>` 自体を消すと、見出しジャンプやページの主題が読み上げで取れなくなる。この場合は説明・アクションも出さない。
-（[navigation.md](./navigation.md)）
+
+1 段入った画面（下層ヘッダーのある画面）で `<h1>` を隠すかは [navigation.md](./navigation.md) §13-2 が正。クラスの対応は次のとおり。
+
+| 画面 | `<h1>` のクラス |
+|------|----------------|
+| それ自体が名前を持つ画面 | `max-lg:sr-only` |
+| 一覧から入った個別のレコードの詳細 | なし |
 
 ---
 
-## 11. テーブル（セルの見た目）
+## 12. テーブル（セルの見た目）
 
 列の順序・ソート・ページネーション等のルールは別途定める。ここはセルの見た目だけ。
 
@@ -563,7 +621,7 @@ EmptyState と対になる部品。体裁を揃える。
 
 ---
 
-## 12. フォーム
+## 13. フォーム
 
 - ラベルは必ず入力欄と関連付ける（`htmlFor` / `id`）。プレースホルダをラベル代わりにしない。
 - エラーメッセージは入力欄の**直下**に `text-destructive-text` で出す。
@@ -573,7 +631,7 @@ EmptyState と対になる部品。体裁を揃える。
 
 ---
 
-## 13. レビュー用チェックリスト
+## 14. レビュー用チェックリスト
 
 差分行を対象にチェックする（既存行の全置換は強制しない。**触った画面のついでに直す**）。
 
@@ -583,7 +641,7 @@ EmptyState と対になる部品。体裁を揃える。
 - [ ] クラス名をテンプレートリテラルで組み立てていないか → 完全な文字列で書く（[color.md](./color.md)）
 - [ ] 状態色をコンポーネントに直書きしていないか → constants の色マップへ
 - [ ] `*-surface` を使う箇所で `*-surface-foreground` とセットになっているか
-- [ ] 色つきベタ塗りボタンを作っていないか（塗りは `primary` / `destructive` / LINE 導線の `line` のみ）
+- [ ] 色つきベタ塗りボタンを作っていないか（塗りは `primary` / `destructive` / LINE に関わる操作の `line` のみ）
 - [ ] 16進カラー・インライン style が例外（PDF・フォールバック画面・canvas 等）以外で使われていないか
 - [ ] 新しい色を足した場合、`pnpm check`（コントラスト検証）を通したか
 
@@ -596,8 +654,8 @@ EmptyState と対になる部品。体裁を揃える。
 
 ### スペーシング
 
-- [ ] 余白が 4 段（`1` / `2` / `4` / `6`）に収まっているか（`p-[13px]` 等の任意値が無いか）
-- [ ] 子要素の `mt-*` / `mb-*` ではなく親の `space-y-*` / `gap-*` で間隔を作っているか
+- [ ] 画面側の余白（部品どうし・セクションの間、ページ外周）が spacing.md §1 の段に収まっているか（`p-[13px]` 等の任意値が無いか）
+- [ ] 画面側で、子要素の `mt-*` / `mb-*` ではなく親の `space-y-*` / `gap-*` で間隔を作っているか
 
 ### コンポーネント
 
@@ -609,18 +667,20 @@ EmptyState と対になる部品。体裁を揃える。
 - [ ] `window.confirm()` を使っていないか
 - [ ] 確認ダイアログが ESC・背景クリックで閉じないか
 - [ ] 通知・バナーが Card 上に置かれているか（ページ背景直載せでないか）
+- [ ] トーストを操作完了の短い通知だけに使っているか（対応が必要なエラー・入力エラーをトーストで出していないか）
 - [ ] 状態で切り替えるクラスを、既定のクラスに足さず置き換えているか（`border-input` と `border-destructive` が同居していないか）
 
 ### フォーカス・タッチターゲット
 
 - [ ] フォーカス表示が `focus-visible` で、`ring-2 ring-ring` のリングがあるか（`outline-none` だけで消していないか）
+- [ ] エラー中（`aria-invalid="true"`）の入力欄のリングが `ring-destructive` になっているか
 - [ ] 塗りのあるボタン類に `ring-offset-2` があるか
 - [ ] 押せる要素が 44px 以上か（`min-h-11` / `size-11`。見た目を小さくする場合は疑似要素で当たり判定を広げているか）
 - [ ] 入力欄の高さが `min-h-11` 以上か
 
 ### 重なり・影
 
-- [ ] モーダル・ナビ・確認ダイアログの z-index が [layout.md](./layout.md) の表の値か（`z-50` 等に丸めていないか）
+- [ ] モーダル・ナビ・確認ダイアログ・トーストの z-index が [layout.md](./layout.md) の表の値か（`z-50` 等に丸めていないか）
 - [ ] 暗幕が layout.md の規定どおりか（生カラーの `bg-black/50` にしていないか）
 - [ ] Card・パネル・固定ヘッダー・タブバーに shadow を足していないか（shadow は浮いているものだけ）
 - [ ] 影が 2 段（メニュー・ポップオーバー `shadow-md` / モーダル・ダイアログ `shadow-lg`）のどちらかか

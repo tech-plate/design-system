@@ -105,7 +105,8 @@ solid の比は純白のグリフを載せた値。`pnpm check` は白グリフ�
 | `line-hover` | hover 時の面（`150 94.4% 35.5%`） | `hover:bg-line-hover` |
 | `line-foreground` | `line` 面の上の文字（白） | `text-line-foreground` |
 
-- **使ってよいのは LINE ログイン・友だち追加の導線だけ。** 汎用の緑や成功の表現に使わない（成功は `success`）。
+- **LINE に関わる操作（LINE ログイン・友だち追加など）のための色。** 汎用の緑や成功の表現ではない（成功は `success`）。
+  使い方は [components.md](./components.md) の Button。
 - 上の文字は `text-line-foreground` を使う。`text-white` を直書きしない。
 - `line-foreground` on `line` は 2.22（hover 時 2.85）で **AA 未達**。LINE のブランド規定による色の組み合わせなので
   例外として認め、`tokens.json` の `exempt` に理由を書いて検証から除外している（`pnpm check` に「除外: 理由」が出る）。

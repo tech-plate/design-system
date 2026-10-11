@@ -19,7 +19,7 @@
 | [docs/design.md](./docs/design.md) | **入口**。読む順番、各 docs の索引、to B / to C で分かれるルール、新しいサービスを始める手順 |
 | [docs/color.md](./docs/color.md) | トークンカタログ（アイコン用グレー・favorite・LINE 公式色を含む）、3トーン体系、生カラー禁止、product layer の拡張方法 |
 | [docs/typography.md](./docs/typography.md) | フォント、Tailwind 標準スケールと行間の用途マップ、サイズの下限、段落間と行長、mono の使いどころ |
-| [docs/spacing.md](./docs/spacing.md) | 4px グリッド 4 段と縦長の画面用の大きい段（48 / 64px）の用途マップ |
+| [docs/spacing.md](./docs/spacing.md) | 4px グリッド 5 段（4〜32px）の用途マップ |
 | [docs/layout.md](./docs/layout.md) | ブレークポイント、最大幅、ページの地色、z-index、タッチターゲット、暗幕、横スクロール |
 | [docs/components.md](./docs/components.md) | 部品ごとの仕様（variant・サイズ・状態）とルール、フォーカス表示、影、アイコン、レビューチェックリスト |
 | [docs/navigation.md](./docs/navigation.md) | メニューをオブジェクトで組む原則、権限とスコープの扱い、階層の深さ、スマホ向けナビ |

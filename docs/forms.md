@@ -48,7 +48,7 @@ export function Field({
 | 項目内の余白 | `space-y-2`（8px） |
 | 項目どうしの余白 | `space-y-4`（16px） |
 
-> 余白は [spacing.md](./spacing.md) の4段（4/8/16/24px）から選ぶ。
+> 余白は [spacing.md](./spacing.md) §1 の段から選ぶ。
 > `space-y-1.5`（6px）のようなスケール外の値を使わない。
 
 ## 2. レイアウト
@@ -105,7 +105,7 @@ export function Field({
 | 位置 | その入力の**すぐ下**。フォーム上部にまとめない |
 | サイズ | `text-sm`（ヘルプテキストと同じ。読ませたいものを小さくしない） |
 | 色 | `text-destructive-text` |
-| 入力欄 | エラー時は `border-destructive` を付ける。**色だけに頼らない**（`*` とエラー文が併存する） |
+| 入力欄 | エラー時は `border-destructive` を付ける。フォーカス中のリングも `ring-destructive` にする（[components.md](./components.md) §1-1 フォーカス表示）。**色だけに頼らない**（`*` とエラー文が併存する） |
 | 文言 | 次の行動を書く（[writing.md](./writing.md) §4） |
 
 ### 5-1. エラーをダイアログにまとめない
@@ -146,7 +146,8 @@ react-hook-form の既定（`mode: "onSubmit"` / `reValidateMode: "onChange"`）
   押させて、エラーを出す
 - ボタンは**右寄せ**。並びは 副次 → 主（主アクションが右端）。間隔は `gap-2`
 - **二重送信を防ぐ**。送信中はボタンを無効化する（`LoadingButton` がやる）
-- 送信に成功したら、**次にどうなるかを示す**（画面遷移、または toast で結果を出す）
+- 送信に成功したら、**次にどうなるかを示す**（画面遷移、またはトーストで結果を出す。トーストの仕様は [components.md](./components.md) の Toast）。
+  送信の失敗・入力エラーはトーストにしない（§5）
 
 ```tsx
 <div className="flex justify-end gap-2">
@@ -216,7 +217,7 @@ input[type="month"] {
 - [ ] 送信ボタンを未入力で `disabled` にしていないか
 - [ ] 送信中の表示があるか（二重送信を防げているか）
 - [ ] ボタンが右寄せ・`gap-2`・主アクションが右端か
-- [ ] 余白がスケール（4/8/16/24px）から外れていないか
+- [ ] 画面側の余白（フィールド間・フォームとボタン列の間）が spacing.md §1 の段から外れていないか
 
 ---
 

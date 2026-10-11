@@ -19,7 +19,7 @@
 |--------------|--------------------|
 | [color.md](./color.md) | トークンカタログ、3 トーン体系、生カラー禁止、product layer での色の足し方 |
 | [typography.md](./typography.md) | フォント、文字サイズと行間の用途マップ、サイズの下限、段落間と行長 |
-| [spacing.md](./spacing.md) | 余白の 4 段と縦長の画面用の大きい段、用途別の指定、角丸 |
+| [spacing.md](./spacing.md) | 余白の 5 段、用途別の指定、角丸 |
 | [layout.md](./layout.md) | ブレークポイント、最大幅、ページの地色、z-index、タッチターゲット、暗幕、横スクロール |
 | [components.md](./components.md) | 部品ごとの仕様とルール、フォーカス表示、影、アイコン、レビュー用チェックリスト |
 | [forms.md](./forms.md) | 1 項目の構造、必須の示し方、エラー表示、検証タイミング、送信 |
@@ -36,7 +36,6 @@
 | ナビの骨格（[navigation.md](./navigation.md)） | サイドバー + ヘッダー | ボトムタブバー + 下層ヘッダー（戻る + 画面名）。`lg` 以上はヘッダーのナビ |
 | 文字の既定（[typography.md](./typography.md)） | 迷ったら `text-sm` | 本文は `text-base`、補助が `text-sm` |
 | 行間の既定（[typography.md](./typography.md)） | 密な箇所は `leading-tight` | 文章は `leading-relaxed` |
-| 余白（[spacing.md](./spacing.md)） | 4 段（〜24px） | 4 段 + 大きい段（48 / 64px）を縦長の画面で使用 |
 | タッチターゲット（[layout.md](./layout.md)） | 44px。密な一覧の行アクションのみ 32px 可 | 44px。例外なし |
 | 主要ボタンの色（[color.md](./color.md)） | `primary`（近黒）のまま | ブランド色を使う場合は `--primary` を上書き（手順は color.md） |
 | リンクの visited（[color.md](./color.md)） | 付けない | 読み物の中だけ付ける（`interactive-visited`） |
@@ -55,6 +54,8 @@ to B でも文章（説明文・お知らせ）は `leading-relaxed`、to C で�
 
 - [ ] トークンを取り込む（[README のインストール節](../README.md#インストール)と、v3 / v4 の導入手順）
 - [ ] フォントを配信する。Noto Sans JP の配信はプロダクトの責務（[typography.md](./typography.md)）
+- [ ] ボトムタブバーを使うなら、プロダクト側の CSS で `--tabbar-height: 56px` と `--tabbar-offset` を定義する（core には無い。
+  タブバー・本文の下余白・トーストの位置がこの変数を参照する。[navigation.md](./navigation.md) §11-3）
 - [ ] 画面がカード型かどうかを決め、地色をレイアウト側で 1 回だけ指定する（[layout.md](./layout.md)）
 - [ ] ブランド色を使うなら `--primary` 等を上書きし、コントラストを確認する（[color.md](./color.md)）
 - [ ] ブランド色・アプリシェル・チャート色・ドメイン状態色など、core に無いものは product layer に置く
