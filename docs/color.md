@@ -16,7 +16,7 @@ Tailwind のクラス名は v3 preset / v4 `@theme inline` が CSS 変数を参�
 | `primary` / `primary-foreground` | 主要アクション（既定のボタン） | `bg-primary` `text-primary-foreground` |
 | `secondary` / `secondary-foreground` | 副次アクション・控えめな強調 | `bg-secondary` `text-secondary-foreground` |
 | `muted` / `muted-foreground` | 薄い面 / 補助テキスト・ラベル | `bg-muted` `text-muted-foreground` |
-| `accent` / `accent-foreground` | ホバー面・選択中の項目背景 | `bg-accent` `text-accent-foreground` |
+| `accent` / `accent-foreground` | 選択中の項目背景（hover には使わない。[components.md](./components.md) §1-6） | `bg-accent` `text-accent-foreground` |
 | `border` | 境界線・区切り | `border-border` |
 | `input` | フォーム入力の枠線 | `border-input` |
 | `ring` | フォーカスリング | `ring-ring` |
@@ -150,7 +150,7 @@ solid はアイコン・ドット・インジケータ等の小面積オブジ�
   **迷う中間グレーは `muted-foreground` に寄せる。**
 - 罫線・外枠 → `border-border`。地色 → `bg-background`、薄い面・ゼブラ → `bg-muted`。
 - **アイコンは文字色ではなくアイコン用トークン（§1-1）で塗る。** 通常は `text-icon`、
-  hover・focus・選択中は `text-icon-strong`（押せる場合は `bg-accent` も足す）、空状態などの装飾は `text-icon-subtle`。
+  hover・focus・選択中は `text-icon-strong`（押せる場合は hover の塗りも足す。[components.md](./components.md) §1-6）、空状態などの装飾は `text-icon-subtle`。
   色を増やさず明度＋状態変化で操作可能を示す。
 - アイコンに `text-foreground/70` のような**半透明を使わない** — SVG の線が重なる所だけ濃く見えるので、ベタ色のトークンで持っている。
 - **disabled** は専用グレートークンを作らず、地色に `opacity`（≒50%）で表現する。

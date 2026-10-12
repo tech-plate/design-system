@@ -144,17 +144,10 @@ react-hook-form の既定（`mode: "onSubmit"` / `reValidateMode: "onChange"`）
   （[components.md](./components.md)）
 - **未入力を理由に送信ボタンを `disabled` にしない。** 押せない理由が分からず詰まる。
   押させて、エラーを出す
-- ボタンは**右寄せ**。並びは 副次 → 主（主アクションが右端）。間隔は `gap-2`
+- 送信ボタンの行はボタン行（[components.md](./components.md) §2-3）
 - **二重送信を防ぐ**。送信中はボタンを無効化する（`LoadingButton` がやる）
 - 送信に成功したら、**次にどうなるかを示す**（画面遷移、またはトーストで結果を出す。トーストの仕様は [components.md](./components.md) の Toast）。
   送信の失敗・入力エラーはトーストにしない（§5）
-
-```tsx
-<div className="flex justify-end gap-2">
-  <Button variant="outline" onClick={onCancel}>キャンセル</Button>
-  <LoadingButton isLoading={isSubmitting} type="submit">申請を提出する</LoadingButton>
-</div>
-```
 
 ### 7-1. 破壊的な操作は確認する
 
@@ -193,6 +186,10 @@ input[type="month"] {
 }
 ```
 
+### 8-2. Select の矢印は部品側で置く
+
+`Select` は既定の矢印を消して chevron を自前で置く（[components.md](./components.md) §3-1 が正）。
+
 ## 9. 共通コンポーネントに集約する
 
 **`Field` 相当を1つ持ち、フォームは必ずそれを経由する。**
@@ -216,7 +213,7 @@ input[type="month"] {
 - [ ] 検証タイミングを既定から変えていないか（`mode` を書き換えていないか）
 - [ ] 送信ボタンを未入力で `disabled` にしていないか
 - [ ] 送信中の表示があるか（二重送信を防げているか）
-- [ ] ボタンが右寄せ・`gap-2`・主アクションが右端か
+- [ ] 送信ボタンの行が components.md §2-3 どおりか
 - [ ] 画面側の余白（フィールド間・フォームとボタン列の間）が spacing.md §1 の段から外れていないか
 
 ---

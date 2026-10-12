@@ -225,10 +225,14 @@ OK: 設定 > 営業時間（中のタブで 営業時間・早番遅番・日付
 
 | 状態 | ラベル | アイコン |
 |------|--------|---------|
-| 選択中 | `text-primary` | 線 `text-icon-strong` + 塗り `fill-icon-fill` |
+| 選択中 | `font-semibold text-foreground` | 線 `text-icon-strong` + 塗り `fill-icon-fill` |
 | 非選択 | `text-muted-foreground` | 線 `text-icon`、塗りなし |
 | hover | 変えない | 変えない |
 | focus-visible | [components.md](./components.md) のボタン類のリング | — |
+
+- **選択中は太さ（`font-medium` → `font-semibold`）と色（`text-muted-foreground` → `text-foreground`）の両方で示す**（色だけで状態を伝えない）。
+  タブバーと `lg` 以上のヘッダーのテキストリンク（§11-5）の両方に当てる。
+- **ナビにはブランド色（`text-primary`）を使わない。** ブランド色が黒系でない場合、選択中のラベルだけ色が浮き、アイコンの色ともずれるため。
 
 - 選択中のリンクに `aria-current="page"` を付け、色の切り替えもこの属性で行う（`group-aria-[current=page]:` 等）。
   状態を JS の条件分岐とクラスの両方に持つと、片方だけ更新されてズレる。
@@ -285,12 +289,11 @@ OK: 設定 > 営業時間（中のタブで 営業時間・早番遅番・日付
 | 項目 | 規定 |
 |------|------|
 | 位置 | トップ階層のヘッダーの右側に横並び（`flex items-center gap-1`）。アイコンは出さない |
-| 各リンク | `inline-flex min-h-11 items-center rounded-md px-3 text-sm font-semibold` |
-| 選択中 | `text-primary` + ラベルに `underline underline-offset-4` |
+| 各リンク | `inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium` |
+| 選択中 | `font-semibold text-foreground` |
 | 非選択 | `text-muted-foreground hover:text-foreground` |
 
-タブバーでは下線を付けず、ヘッダーでは付ける。タブバーはアイコンの塗りで選択中が分かるが、
-ヘッダーのテキストリンクには色以外の手がかりが要る（色だけで状態を伝えない）。
+選択中の示し方とブランド色を使わない理由は §11-2。
 
 ## 12. トップ階層のヘッダー
 
@@ -368,7 +371,7 @@ OK: 設定 > 営業時間（中のタブで 営業時間・早番遅番・日付
 
 | 要素 | 規定 |
 |------|------|
-| 戻るリンク | `inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary`、左向きの矢印 16px。文言は「〈戻り先〉に戻る」 |
+| 戻るリンク | `inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground`、左向きの矢印 16px。文言は「〈戻り先〉に戻る」 |
 | 見出し | `<h1>`。サイズは [typography.md](./typography.md) のページ見出し |
 
 - **ヘッダーの戻ると本文の戻るリンクの切り替え境界を同じ `lg` にする。** ずれると、

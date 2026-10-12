@@ -137,6 +137,15 @@
 | disabled | 専用のグレーを作らず `disabled:opacity-60` + `disabled:cursor-not-allowed`（入力部品は §3） |
 | 処理中 | Button は §2 のローディング状態。画面の一部は Spinner、ページ全体は Skeleton（§8） |
 
+### 1-6. hover の塗り
+
+**地が透明な部品の hover は、全部品で `hover:bg-foreground/5`。**
+Button の `secondary` / `outline` / `ghost`、FilterChip（非選択）、アイコンボタン、テーブルの行などが対象。
+
+- `hover:bg-accent` にしない。`accent` は `muted` と同じ明るさ（96.1%）なので、グレー地（`bg-muted`）の上では hover が見えない。
+- 半透明の `bg-foreground/5` は地の色に関係なく効く（白地での見え方は `accent` とほぼ同じ）。
+- 塗りのある部品（`primary` / `destructive` / `line`、選択中の FilterChip）の hover は各部品の表のとおり。
+
 ---
 
 ## 2. Button / アクション
@@ -165,11 +174,17 @@
 | variant | 使う場面 | クラス | hover |
 |---------|---------|--------|-------|
 | `primary`（既定） | 画面・ダイアログの主要アクション。1 つだけ | `border-0 bg-primary text-primary-foreground` | `hover:bg-primary/90` |
-| `secondary` | 主導線の次に来る操作（関連する画面へ進む等）。outline より「押せる」とはっきり見せたいとき | `border border-foreground bg-card text-foreground` | `hover:bg-accent hover:text-accent-foreground` |
-| `outline` | キャンセル・補助的な操作 | `border border-input bg-card text-foreground` | `hover:bg-accent hover:text-accent-foreground` |
-| `ghost` | 面の上で目立たせたくない操作 | `border-0 bg-transparent text-foreground` | `hover:bg-accent hover:text-accent-foreground` |
+| `secondary` | 主要アクションではないが、その画面で前に進むための操作（空状態の次の行動、エラーからの再読み込み、「編集」など、画面や単位ごとの主な操作） | `border border-foreground bg-transparent text-foreground` | `hover:bg-foreground/5` |
+| `outline` | キャンセル・戻る・補助的な操作。破壊的操作の入口（確認ダイアログを開くだけの「削除」「取り消す」ボタン） | `border border-input bg-transparent text-foreground` | `hover:bg-foreground/5` |
+| `ghost` | 面の上で目立たせたくない操作 | `border-0 bg-transparent text-foreground` | `hover:bg-foreground/5` |
 | `destructive` | 削除・取り消しなど元に戻せない操作 | `border-0 bg-destructive text-destructive-foreground` | `hover:bg-destructive/90` |
 | `line` | LINE に関わる操作（LINE ログイン・友だち追加など）。どの場面で使うかはプロダクトごとに決める | `border-0 bg-line text-line-foreground` | `hover:bg-line-hover` |
+
+> `secondary` / `outline` / `ghost` の地は**透明**（`bg-transparent`）。`bg-card`（白）にすると、グレー地（`bg-muted`）の上で白い箱が浮く。
+> hover は §1-6（`hover:bg-foreground/5`）。
+
+> **`outline` はグレー地（`bg-muted`）の上に直接置かない。** 枠の `border-input`（89.8%）がグレー地（96.1%）とほぼ同じで見えなくなる。
+> グレー地では、まずボタンをカード（白地）の中に置く。カードに入れられないときは、上の表で `outline` の場面（キャンセル・戻るなど）でも `secondary` を使う。
 
 > `line` は LINE 公式のブランド規定色。LINE と関係のない操作に汎用の緑として転用しない。
 
@@ -187,11 +202,69 @@
 | disabled | `disabled:cursor-not-allowed disabled:opacity-60` |
 | loading | 文言の左に Spinner（`sm`、16px）を出し、自動で disabled。押せないことは opacity で示す |
 
-**スマホでの挙動**
+### 2-3. ボタン行
 
-- ボタンを並べる行は `flex flex-wrap justify-end gap-2`。狭い幅で 3 つ並んでもはみ出さないよう折り返す。
-  並び順は 副次 → 主（主要アクションが右端。[forms.md](./forms.md)）。
-- スマホ幅で全画面表示する編集モーダル（§7-3）のフッターだけは、主要アクションを `w-full` にし、
+**ボタン行**とは、ボタンだけを並べた行のこと（フォームの送信行、モーダル・確認ダイアログのフッター、
+画面やカードの末尾の操作行）。ボタン行の規定はこの節が正で、他の文書はここを参照する。
+
+**対象外**: 文字や情報と同じ行に置くボタン（カード見出し横の「編集」、テーブル・リストの行アクション、
+ヘッダーのボタン、入力欄の横のボタンなど）と、中央寄せの塊の中の行動（EmptyState / ErrorState の次の行動・再読み込み。§8-4・§8-5）は
+ボタン行ではない。**幅に関係なく中身の幅のまま**にし、この節の規定を当てない。
+
+| 項目 | `md` 未満（スマホ） | `md` 以上 |
+|------|-------------------|-----------|
+| 幅 | **容器の幅いっぱい**（1 つなら全幅、2 つなら均等幅） | 中身の幅 |
+| 寄せ | —（横いっぱい） | 右寄せ |
+| 1 行に並べる数 | **2 つまで**。3 つは 2 行（下のルール） | 1 行に横並び |
+| 並び順 | 副次 → 主（**主要アクションが右**、2 行なら下） | 副次 → 主（主要アクションが右端） |
+| サイズ | `md` | `md` |
+
+クラスはボタンの数ごとの表（下）が正。モーダル・確認ダイアログは下の「ダイアログの扱い」に従う。
+
+- **3 つ以上置きたくなったら、幅に関係なくまず別の置き方を検討する。**
+  - アイコンだけのボタンにする（`aria-label` 必須。§2-1）
+  - ヘッダーの右端へ移す（[navigation.md](./navigation.md) §13-4 の条件に合う操作だけ。編集・削除などその画面固有の操作は置けない）
+  - 頻度の低い操作はメニューにまとめる
+- それでも 3 つになるときは、`md` 未満で 2 行にする。**主要アクションは下の行に単独で全幅**、上の行に残りの 2 つを均等幅で置く。
+  DOM の順は 副次 → 主 のまま（上の行 → 下の行）にし、`md` 以上では上の行の囲みを `md:contents` で外して 1 行に並べる。
+
+| ボタンの数 | 外側 | 各ボタン |
+|-----------|------|---------|
+| 1 つ | `md:flex md:justify-end` | `w-full md:w-auto` |
+| 2 つ | `grid grid-cols-2 gap-2 md:flex md:justify-end` | `w-full md:w-auto` |
+| 3 つ（`md` 未満は 2 行） | `grid gap-2 md:flex md:justify-end` の中に、上の行 `grid grid-cols-2 gap-2 md:contents` + 下の行の主要ボタン | `w-full md:w-auto` |
+
+```tsx
+{/* 2 つ */}
+<div className="grid grid-cols-2 gap-2 md:flex md:justify-end">
+  <Button variant="outline" className="w-full md:w-auto">キャンセル</Button>
+  <Button className="w-full md:w-auto">保存する</Button>
+</div>
+
+{/* 3 つ（md 未満は 2 行、md 以上は 1 行） */}
+<div className="grid gap-2 md:flex md:justify-end">
+  <div className="grid grid-cols-2 gap-2 md:contents">
+    <Button variant="ghost" className="w-full md:w-auto">下書き保存</Button>
+    <Button variant="outline" className="w-full md:w-auto">キャンセル</Button>
+  </div>
+  <Button className="w-full md:w-auto">申請を提出する</Button>
+</div>
+```
+
+- スマホで全幅にするのは、押せる範囲を広げ、片手でも押しやすくするため。
+- **均等幅に文言が収まるか確かめる**（`md` 未満のボタン行と、幅に関係なくダイアログ）。スマホ幅（375px）で 2 つ並べると 1 つあたり約 160px で、左右の `px-6` を引くと
+  全角 7 文字ほどしか入らない（ボタンは `whitespace-nowrap` なので、はみ出した文字は隣のボタンに重なる）。収まらないときは次の順で直す。
+  1. **まず文言を短くする。**
+  2. 短くできなければ縦に積む。DOM の順のまま積むので、副次 → 主 の行では主要アクションが下に来る。
+     - 通常のボタン行: `md` 未満だけ縦に積む（外側を `grid gap-2 md:flex md:justify-end`）
+     - ダイアログ: 幅に関係なく縦に積む（外側を `grid gap-2`）
+
+**ダイアログの扱い**（Modal・確認ダイアログのボタン行。§7）
+
+- **幅に関係なく均等幅の 2 列**（`grid grid-cols-2 gap-2`、各ボタン `w-full`）。1 つなら `w-full`。`md` 以上でも右寄せにしない。
+- 並びは 副次 → 主（主要アクションが右）。**破壊的・取り消せない操作のダイアログだけは実行が左・キャンセルが右**で、
+  初期フォーカスはキャンセルに当てる（詳細は §7-4）。
+- 例外: スマホ幅で全画面表示する編集モーダル（§7-3）の `md` 未満のフッターは、主要アクション 1 つを `w-full` にし、
   キャンセルを出さない（閉じる導線はヘッダー左の ×）。
 
 ---
@@ -221,7 +294,16 @@
 |------|-----------|
 | Input | `type="date"` / `type="month"` は `appearance-none min-w-0 max-w-full` を部品側で当てる（[forms.md](./forms.md)） |
 | Textarea | 最小の高さ 72px（`min-h-[4.5rem]`。v4 では `min-h-18`）、`resize-y`（縦方向だけ伸縮） |
-| Select | **ネイティブの矢印を消さない**（`appearance-none` にしない）。消すと iOS で選択 UI が出なくなる端末がある |
+| Select | `appearance-none pr-10` にしてブラウザ既定の矢印を消し、chevron を自前で置く（下の表）。既定の矢印は右端に寄りすぎ、ブラウザ内部の余白で文字の左位置も Input よりずれる。`appearance-none` にすると左の余白は Input と同じ `px-3` になる |
+
+**Select の chevron**
+
+| 項目 | クラス・規定 |
+|------|------------|
+| 親 | `relative`（select をくるむ） |
+| アイコン | ChevronDown 20px（`size-5`）、`text-icon`、`aria-hidden="true"` |
+| 位置 | `pointer-events-none absolute right-3 top-1/2 -translate-y-1/2`。日付入力（`type="date"`）のカレンダーアイコンと右からの距離が揃う（Chromium で確認。iOS Safari の日付入力は [forms.md](./forms.md) §8-1 の `appearance: none` でアイコンが出ない） |
+| 文字との重なり | select 側に `pr-10`（40px）。長い選択肢でも文字が chevron の下に潜らない |
 
 ### 3-2. Checkbox
 
@@ -247,10 +329,12 @@
 
 ### 4-1. ルール
 
-- **塗りのみ・border なし**で表現する。`bg-*-surface` + `text-*-surface-foreground` の組み合わせだけを使い、
-  枠線を足さない。塗りと枠線を両方付けると主張が強すぎ、画面内で通知が乱立して見える。
-- **必ず Card（またはコンテンツのまとまり）の上に置く。** ページ背景への直載せは禁止。
-  地の上に浮いた帯は、どの情報にかかる注記なのかが伝わらない。
+- **基本は Card（またはコンテンツのまとまり）の中に置き、塗りのみ・border なし**で表現する。
+  `bg-*-surface` + `text-*-surface-foreground` の組み合わせだけを使い、枠線を足さない。
+  カードの中で塗りと枠線を両方付けると主張が強すぎ、画面内で通知が乱立して見える。
+- **カードの外に単独で置くときだけ border で囲む**（枠色は §4-2）。文脈上カードから独立させたいとき、
+  カード型でない画面（[layout.md](./layout.md) の地色）のときに限る。地の上に塗りだけの帯を置くと、
+  面の境界がぼやけてどこまでが通知か分かりにくいため。
 - 語彙は意味で選ぶ: エラー = `destructive`、注意 = `warning`、情報 = `info`、完了 = `success`。
   **見た目の好みで色を選ばない。**
 - アイコンを添える場合は `*-solid` を使う（`*-surface-foreground` でも可）。
@@ -270,6 +354,18 @@
 | `warning` | `bg-warning-surface text-warning-surface-foreground` |
 | `info` | `bg-info-surface text-info-surface-foreground` |
 | `success` | `bg-success-surface text-success-surface-foreground` |
+
+**カードの外に単独で置くときの枠色**（`border` + 下の色。Card の中では枠なし。§4-1）
+
+| tone | 枠色 |
+|------|-------------------|
+| `destructive` | `border-destructive`（入力欄のエラー枠と同じ） |
+| `warning` | `border-warning` |
+| `info` | `border-info` |
+| `success` | `border-success` |
+
+枠色は各トーンの text トーン（`destructive` は DEFAULT）を使う。どれも白地に対して 3:1 以上
+（text トーンは `background` に対して 4.5:1 以上、`destructive` の赤は純白に対して 4.83。[color.md](./color.md)）で、非テキストのコントラスト（WCAG 1.4.11）を満たす。
 
 **読み上げのロール**は緊急度で選ぶ。
 
@@ -384,7 +480,7 @@
 | 箱 | `w-full max-h-[90dvh] overflow-y-auto rounded-lg bg-card p-6 text-card-foreground shadow-lg` |
 | 幅 | 既定 `max-w-md`。入力項目の多い編集フォームは `max-w-xl` |
 | タイトル | `<h2>`、`text-lg font-semibold leading-normal`。本文との間は `space-y-2` 相当 |
-| アクション行 | 本文の後ろに `flex flex-wrap justify-end gap-2`。主要アクションが右端 |
+| アクション行 | 本文の後ろに `mt-6` で置く。幅・並び順は §2-3 のダイアログの扱い |
 
 **振る舞い**
 
@@ -407,7 +503,7 @@
 | 箱 | `h-dvh max-h-dvh max-w-full rounded-none`（暗幕の `p-4` も外す） | §7-2 の箱（`max-w-xl`） |
 | ヘッダー | 下層ヘッダーと同じ形（左に ×、中央にタイトル。[navigation.md](./navigation.md)）+ 上端に safe-area の余白 | 同左 |
 | 本文 | `flex-1 overflow-y-auto p-6`（本文だけがスクロールする） | 同左 |
-| フッター | `border-t border-border p-4` + 下端に safe-area の余白。主要アクションは `w-full`、キャンセルは出さない | `flex justify-end gap-2`、キャンセル + 主要アクション |
+| フッター | `border-t border-border p-4` + 下端に safe-area の余白。ボタンは §2-3 のダイアログの扱いの例外（主要アクション 1 つだけ） | §2-3 のダイアログの扱い |
 | 保存失敗 | 本文の先頭に Alert（`destructive`）。モーダルの背後の画面に出しても、開いている間は見えない | 同左 |
 
 ### 7-4. 確認ダイアログ
@@ -419,10 +515,18 @@
 | 箱 | `w-full max-w-sm rounded-lg bg-card p-6 text-card-foreground shadow-lg` |
 | タイトル | `<h2>`、`text-lg font-semibold leading-normal`。問いの形で書く |
 | 説明（任意） | `text-sm text-muted-foreground`、タイトルとの間は `space-y-2` 相当。元に戻せるかどうかを書く |
-| ボタン行 | `mt-6 flex flex-wrap justify-end gap-2`。左にキャンセル（`outline`）、右に実行（`primary`、破壊的操作は `destructive`）。サイズは `md` |
+| ボタン行 | 本文の後ろに `mt-6` で置く。幅は §2-3 のダイアログの扱い。サイズは `md`。並び順は下の表 |
 | 閉じ方 | ESC・背景クリックでは閉じない。キャンセルボタンだけ |
 | 実行中 | 実行ボタンをローディング状態にし、キャンセルも disabled にする |
-| フォーカス | Modal と同じ（初期フォーカス・閉じ込め・参照カウントのスクロール停止） |
+| フォーカス | 閉じ込め・参照カウントのスクロール停止は Modal と同じ。初期フォーカスは下の表 |
+
+| 操作の種類 | 左 | 右 | 初期フォーカス |
+|-----------|----|----|---------------|
+| 通常（送信・確定など） | キャンセル（`outline`） | 実行（`primary`） | 左（キャンセル） |
+| 破壊的・取り消せない操作（削除・予約の取り消しなど） | 実行（`destructive`） | キャンセル（`outline`） | 右（キャンセル）。実行ボタンは初期フォーカスから外す |
+
+- 表示順と DOM の順は揃える（CSS の `order` で入れ替えない。Tab の順が見た目と逆になる）。
+- 破壊的操作では、実行ボタンが先頭に来ても**初期フォーカスは必ずキャンセル側**に当てる。開いた直後の Enter で取り消せない操作が実行されないようにするため。
 
 ---
 
@@ -487,7 +591,7 @@
 | アイコン | **必ず出す**。32px（`size-8`）、`text-icon-subtle`、`aria-hidden="true"`。下に `mb-4` |
 | 見出し | 「〜はありません」。`text-xl font-semibold leading-normal text-foreground`、下に `mb-2` |
 | 補足（任意） | 次に何が起きるか・何をすればよいか。`text-base leading-relaxed break-words` |
-| 次の行動（任意） | 遷移するリンクの Button（`outline`、`md`）。`mt-6`、`flex flex-wrap justify-center gap-2` |
+| 次の行動（任意） | 遷移するリンクの Button（`secondary`、`md`）。**中身の幅で中央寄せ**（§2-3 の対象外）。`mt-6 flex flex-wrap justify-center gap-2` |
 
 | variant | 外枠の padding・面 | 使う場面 |
 |---------|-------------------|---------|
@@ -506,7 +610,7 @@ EmptyState と対になる部品。体裁を揃える。
 | 外枠 | `px-4 py-8 text-center text-muted-foreground`、`role="alert"` |
 | アイコン | 警告の三角形。32px（`size-8`）、`text-destructive-text`、`aria-hidden="true"`。下に `mb-4` |
 | メッセージ | `text-base break-words`。文言は [writing.md](./writing.md) |
-| 行動 | `mt-6 flex flex-wrap items-center justify-center gap-2`。再試行できるなら「再読み込み」（`outline`）、認証切れなら「ログイン」（`primary`）。サイズは `md` |
+| 行動 | **中身の幅で中央寄せ**（§2-3 の対象外）。`mt-6 flex flex-wrap items-center justify-center gap-2`。再試行できるなら「再読み込み」（`secondary`）、認証切れなら「ログイン」（`primary`）。サイズは `md` |
 
 ---
 
@@ -561,13 +665,14 @@ EmptyState と対になる部品。体裁を揃える。
 | 状態 | クラス |
 |------|--------|
 | 選択中 | `border-primary bg-primary font-semibold text-primary-foreground hover:bg-primary/90` |
-| 非選択 | `border-muted-foreground/60 font-medium text-foreground hover:bg-accent hover:text-accent-foreground` |
+| 非選択 | `border-muted-foreground/60 font-medium text-foreground hover:bg-foreground/5` |
 | focus-visible | §1-1 のボタン類のリング（`ring-offset-2` あり） |
 | disabled | `disabled:cursor-not-allowed disabled:opacity-60` |
 
 - 見た目の高さは 36px（`h-9`）。当たり判定は疑似要素で上下に 4px ずつ広げて 44px にする。
   見た目を 44px にすると一覧の上で chip が重く見える。
 - 選択状態は `aria-pressed` で伝える。
+- 非選択の hover は §1-6。
 - 非選択の枠線は `border-input` にしない。白地でほとんど見えず、押せる要素だと分からない。
 - chip 群は `flex flex-wrap gap-2`。スマホで収まらない場合は折り返す。
 
@@ -606,8 +711,9 @@ EmptyState と対になる部品。体裁を揃える。
 | `<td>`（既定） | `border-b border-border px-4 py-2 text-left align-middle whitespace-nowrap text-foreground` |
 | `<td>`（可変長の短めの文字: 氏名・組織名など） | 既定 + `max-w-48 truncate`、`title` に全文 |
 | `<td>`（可変長の長めの文字: メール・タイトル・説明など） | 既定 + `max-w-xs truncate`、`title` に全文 |
-| `<tr>`（行） | `transition-colors hover:bg-accent`。クリックで遷移する行は `cursor-pointer` も付ける |
+| `<tr>`（行） | `transition-colors hover:bg-foreground/5`。クリックで遷移する行は `cursor-pointer` も付ける |
 
+- 行の hover は §1-6。
 - セルの padding は [spacing.md](./spacing.md) の「テーブルセルの padding」に従う（横 16px／縦 8px）。
   1 つの表の中で揃える。
 - 全セルを 1 行（`whitespace-nowrap`）にし、縦方向は `align-middle` で揃える。
@@ -664,9 +770,12 @@ EmptyState と対になる部品。体裁を揃える。
 - [ ] アイコンのみのボタンに `aria-label` があるか
 - [ ] ボタン文言が定数から引かれているか
 - [ ] `size="sm"`（32px）のボタンを、to B の密な一覧の行アクション以外で使っていないか
+- [ ] ボタン行が §2-3 に従っているか（`md` 未満は全幅・1 行 2 つまで、ダイアログは均等幅 2 列。§7-3 の `md` 未満を除く）
+- [ ] ボタン行でないボタン（見出し横・行アクション・ヘッダー・EmptyState / ErrorState）を全幅にしていないか
 - [ ] `window.confirm()` を使っていないか
 - [ ] 確認ダイアログが ESC・背景クリックで閉じないか
-- [ ] 通知・バナーが Card 上に置かれているか（ページ背景直載せでないか）
+- [ ] 破壊的な確認ダイアログは 実行（左）／キャンセル（右）で、初期フォーカスがキャンセルか
+- [ ] 通知・バナーが Card の中では枠なし、カードの外に単独で置くときだけトーンの枠色の `border` で囲まれているか
 - [ ] トーストを操作完了の短い通知だけに使っているか（対応が必要なエラー・入力エラーをトーストで出していないか）
 - [ ] 状態で切り替えるクラスを、既定のクラスに足さず置き換えているか（`border-input` と `border-destructive` が同居していないか）
 
