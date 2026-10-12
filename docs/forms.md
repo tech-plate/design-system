@@ -144,6 +144,7 @@ export function Field({
 | 色 | `text-destructive-text` |
 | 入力欄 | エラー時は `border-destructive` を付ける。フォーカス中のリングも `ring-destructive` にする（[components.md](./components.md) §1-1 フォーカス表示）。**色だけに頼らない**（`*` とエラー文が併存する） |
 | 文言 | 次の行動を書く（[writing.md](./writing.md) §4） |
+| 読み上げ | 入力に `aria-invalid="true"`、エラー文を `aria-describedby` で紐づける（説明文もあれば id を並べる）。`aria-live` / `role="alert"` は付けない（[a11y.md](./a11y.md) §8-1） |
 
 ### 5-1. エラーをダイアログにまとめない
 
@@ -153,6 +154,7 @@ export function Field({
 例外は、**単一フィールドに帰属しないエラー**（「決済合計と総売上が一致しません」のような
 複数入力の整合性エラー）。この場合はフォーム先頭に `Alert` の surface variant で置く
 （[components.md](./components.md)）。ダイアログではない。
+この Alert も `role="alert"` にせず、`tabindex="-1"` を付けて送信時にフォーカスを移す（[a11y.md](./a11y.md) §8-1）。
 
 ### 5-2. 最初のエラーへスクロールする
 

@@ -1,6 +1,6 @@
 {
   "name": "@tech-plate/design-system",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "全社共通のデザイントークン（CSS 変数）とデザインルール。Tailwind v3 / v4 の両方から参照できる薄いアダプタ付き。",
   "license": "MIT",
   "repository": {

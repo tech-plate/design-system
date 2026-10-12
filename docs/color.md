@@ -34,7 +34,7 @@ Tailwind のクラス名は v3 preset / v4 `@theme inline` が CSS 変数を参�
 | `icon-strong` | 選択中・強調・hover のアイコンの線 | `text-icon-strong` | 7.81 |
 | `icon-fill` | 選択中アイコンの塗り。**装飾専用**（形は `icon-strong` の線で伝える） | `fill-icon-fill` | 1.48（検証対象外） |
 
-`icon` / `icon-strong` は非テキストのコントラスト 3:1（WCAG 1.4.11）を `pnpm check` で検証している。
+`icon` / `icon-strong` は非テキストのコントラスト 3:1（WCAG 1.4.11）を `pnpm check` で検証している（`input` も同じ。§8）。
 `icon-subtle` / `icon-fill` は `tokens.json` で `decorative: true` とし、検証から除外している。
 操作や状態を伝えるアイコンに装飾専用の 2 つを使わないこと。
 
@@ -58,7 +58,7 @@ blue / green / yellow を複数の意味に流用すると（リンクも情報�
 ### 1-3. 3トーン体系（text / surface / solid）
 
 同じ語彙でも用途によって必要なコントラストが違う。そのため各語彙を3トーンに分ける。
-**すべて WCAG 2.1 AA（通常テキスト 4.5:1）以上を実測済み**（`pnpm check`）。
+**すべて WCAG 2.2 AA（通常テキスト 4.5:1）以上を実測済み**（`pnpm check`）。
 
 | トーン | 用途 | 使い方 |
 |--------|------|--------|
@@ -368,7 +368,7 @@ module.exports = {
 
 非テキスト（3:1、WCAG 1.4.11）:
 
-- `nonText: true` のトークン（`icon` / `icon-strong`）vs `background`
+- `nonText: true` のトークン（`icon` / `icon-strong` / `input`）vs `background`
 
 除外（`EXEMPT` 行。黙ってスキップせず「除外: 理由」を出力し、PASS/FAIL の集計に含めない）:
 
@@ -377,8 +377,8 @@ module.exports = {
 
 参考表示（`INFO` 行。閾値なし）: 各 `*-surface` vs `background`。
 
-`border` / `input`（白地で 1.26）は現時点で 3:1 の対象にしていない。値を変えると全プロダクトの見た目が変わるため。
-入力欄の枠のように境界そのものが操作対象を示す場面では、枠線の色だけに頼らずラベル・背景の差でも示すこと。
+`input`（入力欄・チェックボックス・`outline` ボタン・FilterChip の枠）は、枠そのものが操作できる場所を示すので 3:1 の対象。
+`border`（白地で 1.26）は区切り線で、無くても内容が読めるので対象にしない。
 
 ## 9. ダークモードの対応範囲
 

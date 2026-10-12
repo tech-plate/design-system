@@ -26,6 +26,7 @@
 4. 部品を作る・使うときに [components.md](./components.md)、フォームは [forms.md](./forms.md)、
    メニューは [navigation.md](./navigation.md)
 5. 文言を書くときに [writing.md](./writing.md)
+6. 目指すアクセシビリティの水準と、部品をまたぐルール（キーボード・読み上げ・拡大）は [a11y.md](./a11y.md)
 
 ## 3. 共通の定義
 
@@ -39,6 +40,7 @@
 | [forms.md](./forms.md) | 1 項目の構造、必須の示し方、エラー表示、検証タイミング、送信 |
 | [navigation.md](./navigation.md) | メニューをオブジェクトで組む原則、権限とスコープ、to B のヘッダー（パンくず・ページ名・ユーザーメニュー）、スマホ向けナビ |
 | [writing.md](./writing.md) | ラベル・説明文・エラー・ボタンの書き方、文体と表記の統一 |
+| [a11y.md](./a11y.md) | 目標水準（JIS X 8341-3 AA 相当・WCAG 2.2 AA）、各 docs の a11y ルールの索引、ページの骨格・見出し・キーボード・通知・拡大などの横断ルール、確認方法 |
 
 ## 4. to B と to C で分かれるルール
 
@@ -77,4 +79,4 @@ to B でも文章（説明文・お知らせ）は `leading-relaxed`、to C で�
 - [ ] ブランド色・アプリシェル・チャート色・ドメイン状態色など、core に無いものは product layer に置く
   （[color.md](./color.md)、[README](../README.md)）
 - [ ] 見本ページ（スタイルガイド）を作り、色・文字・余白・部品を 1 画面に並べて確認できるようにする
-- [ ] レビューでは [components.md](./components.md) のレビュー用チェックリストを当てる
+- [ ] レビューでは [components.md](./components.md) と [a11y.md](./a11y.md) のレビュー用チェックリストを当てる
