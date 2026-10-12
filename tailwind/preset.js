@@ -45,11 +45,17 @@ module.exports = {
         "border": "hsl(var(--border) / <alpha-value>)",
         "input": "hsl(var(--input) / <alpha-value>)",
         "ring": "hsl(var(--ring) / <alpha-value>)",
+        "overlay": "hsl(var(--overlay) / <alpha-value>)",
+        "icon-subtle": "hsl(var(--icon-subtle) / <alpha-value>)",
+        "icon": "hsl(var(--icon) / <alpha-value>)",
+        "icon-strong": "hsl(var(--icon-strong) / <alpha-value>)",
+        "icon-fill": "hsl(var(--icon-fill) / <alpha-value>)",
         "interactive": {
           "DEFAULT": "hsl(var(--interactive-text) / <alpha-value>)",
           "surface": "hsl(var(--interactive-surface) / <alpha-value>)",
           "surface-foreground": "hsl(var(--interactive-surface-foreground) / <alpha-value>)",
           "solid": "hsl(var(--interactive-solid) / <alpha-value>)",
+          "visited": "hsl(var(--interactive-visited) / <alpha-value>)",
         },
         "success": {
           "DEFAULT": "hsl(var(--success-text) / <alpha-value>)",
@@ -73,6 +79,12 @@ module.exports = {
           "surface": "hsl(var(--inactive-surface) / <alpha-value>)",
           "surface-foreground": "hsl(var(--inactive-surface-foreground) / <alpha-value>)",
         },
+        "favorite": {
+          "DEFAULT": "hsl(var(--favorite-text) / <alpha-value>)",
+          "surface": "hsl(var(--favorite-surface) / <alpha-value>)",
+          "surface-foreground": "hsl(var(--favorite-surface-foreground) / <alpha-value>)",
+          "solid": "hsl(var(--favorite-solid) / <alpha-value>)",
+        },
         "destructive": {
           "DEFAULT": "hsl(var(--destructive) / <alpha-value>)",
           "foreground": "hsl(var(--destructive-foreground) / <alpha-value>)",
@@ -80,11 +92,23 @@ module.exports = {
           "surface": "hsl(var(--destructive-surface) / <alpha-value>)",
           "surface-foreground": "hsl(var(--destructive-surface-foreground) / <alpha-value>)",
         },
+        "line": {
+          "DEFAULT": "hsl(var(--line) / <alpha-value>)",
+          "foreground": "hsl(var(--line-foreground) / <alpha-value>)",
+        },
+        "line-hover": "hsl(var(--line-hover) / <alpha-value>)",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        "sans": ["\"Noto Sans JP\"", "-apple-system", "BlinkMacSystemFont", "\"Hiragino Sans\"", "\"Hiragino Kaku Gothic ProN\"", "\"Segoe UI\"", "Meiryo", "Roboto", "\"Helvetica Neue\"", "Arial", "sans-serif"],
+      },
+      lineHeight: {
+        "relaxed": "1.7",
+        "tight": "1.3",
       },
     },
   },

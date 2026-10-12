@@ -33,10 +33,16 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
+  --color-overlay: hsl(var(--overlay));
+  --color-icon-subtle: hsl(var(--icon-subtle));
+  --color-icon: hsl(var(--icon));
+  --color-icon-strong: hsl(var(--icon-strong));
+  --color-icon-fill: hsl(var(--icon-fill));
   --color-interactive: hsl(var(--interactive-text));
   --color-interactive-surface: hsl(var(--interactive-surface));
   --color-interactive-surface-foreground: hsl(var(--interactive-surface-foreground));
   --color-interactive-solid: hsl(var(--interactive-solid));
+  --color-interactive-visited: hsl(var(--interactive-visited));
   --color-success: hsl(var(--success-text));
   --color-success-surface: hsl(var(--success-surface));
   --color-success-surface-foreground: hsl(var(--success-surface-foreground));
@@ -51,12 +57,42 @@
   --color-info-solid: hsl(var(--info-solid));
   --color-inactive-surface: hsl(var(--inactive-surface));
   --color-inactive-surface-foreground: hsl(var(--inactive-surface-foreground));
+  --color-favorite: hsl(var(--favorite-text));
+  --color-favorite-surface: hsl(var(--favorite-surface));
+  --color-favorite-surface-foreground: hsl(var(--favorite-surface-foreground));
+  --color-favorite-solid: hsl(var(--favorite-solid));
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
   --color-destructive-text: hsl(var(--destructive-text));
   --color-destructive-surface: hsl(var(--destructive-surface));
   --color-destructive-surface-foreground: hsl(var(--destructive-surface-foreground));
+  --color-line: hsl(var(--line));
+  --color-line-foreground: hsl(var(--line-foreground));
+  --color-line-hover: hsl(var(--line-hover));
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+}
+
+/*
+ * 文字まわりの既定。値そのものを持つので inline ではない通常の @theme にする。
+ * 消費側が後から書いた @theme { --font-sans: …; } が後勝ちで上書きできる。
+ * フォントファイルの配信は各プロダクトの責務（core は名前だけ指定する）。
+ */
+@theme {
+  --font-sans: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Segoe UI", Meiryo, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --leading-relaxed: 1.7;
+  --leading-tight: 1.3;
+}
+
+/*
+ * 押せるものは pointer。v4 の preflight はボタンを cursor: default にするため、
+ * Tailwind 公式の v3→v4 移行ガイドどおり戻す（v3 の preflight は元から pointer なので preset には不要）。
+ * 無効なもの（disabled / aria-disabled="true"）は除き、部品側で cursor-not-allowed を付ける（docs/components.md §1-7）。
+ */
+@layer base {
+  button:not(:disabled):not([aria-disabled="true"]),
+  [role="button"]:not(:disabled):not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
 }

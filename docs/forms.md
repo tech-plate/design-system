@@ -44,10 +44,11 @@ export function Field({
 | 必須マーク | ラベル直後の `*`（§3） |
 | 説明文 | 入力の**下**。補足情報なので、入力を妨げない位置に置く（§4） |
 | エラー | 入力の**下**。`text-sm text-destructive-text` |
+| 入力欄の文字 | **`text-base`（16px）固定**。iOS は 16px 未満の入力欄にフォーカスすると画面を拡大する（[typography.md](./typography.md)） |
 | 項目内の余白 | `space-y-2`（8px） |
 | 項目どうしの余白 | `space-y-4`（16px） |
 
-> 余白は [spacing.md](./spacing.md) の4段（4/8/16/24px）から選ぶ。
+> 余白は [spacing.md](./spacing.md) §1 の段から選ぶ。
 > `space-y-1.5`（6px）のようなスケール外の値を使わない。
 
 ## 2. レイアウト
@@ -56,20 +57,57 @@ export function Field({
 - 入力欄は `w-full`。フォーム全体を `max-w-*` で絞って行長を抑える
 - **例外**: 桁数が決まっていて短い入力（年・月・郵便番号・時刻）は、個別に幅を指定してよい。
   フル幅にすると入力できる量を誤認させるため
-- 項目数が多いときは**セクションに分ける**（見出し + `space-y-6`）。タブで分けるのは、
-  片方だけ保存できる場合に限る（保存境界とタブ境界を一致させる）
+- 項目数が多いときは**セクションに分ける**（見出し + `space-y-6`。カード型の画面では §2-2）。タブで分けるのは、
+  片方だけ保存できる場合に限る（保存境界とタブ境界を一致させる。タブは [components.md](./components.md) の Tabs）
 
 ### 2-1. 2カラムにしない
 
 「氏名（姓）｜氏名（名）」のような**1つの概念を分割した入力だけ**横並びを許す。
 無関係な項目を詰めるために横に並べない（視線が Z 字に動き、入力順が壊れる）。
 
+### 2-2. カード型の画面でのフォーム
+
+カード型の画面（地色が `bg-muted`。[layout.md](./layout.md) §3）では、セクションの数でカードの切り方を変える。
+
+| フォーム | カード | セクションの見出し | ボタン行 |
+|---|---|---|---|
+| セクションが 2 つ以上 | **セクションごとに Card を分ける**。カード同士の間は M（`space-y-4`。[spacing.md](./spacing.md) §2-2） | 各カードの先頭に `<h2>` | **カードの外（グレー地）**。最後のカードの下 |
+| セクションが 1 つ | 1 枚の Card にまとめる | 必要なら先頭に `<h2>` | カードの中（末尾） |
+
+- ボタン行をカードの外に出すのは、**フォーム全体の操作だと分かるようにするため**。最後のカードの中に置くと、そのセクションだけの操作に見える。
+- グレー地には `outline` を置かない（[components.md](./components.md) の Button）。カードの外のボタン行では、キャンセル・戻るも **`secondary`** にする。
+  `ghost`（下書き保存など）は地が透明で枠も無いので、グレー地でもそのまま使える。カードの中のボタン行はキャンセルを `outline` のまま。
+- ボタン行の並び・幅は [components.md](./components.md) §2-3。
+- 必須の凡例（§3）は**最初のカードの上（グレー地）**に置く。特定のセクションではなくフォーム全体の説明なので、カードの中に入れない。
+- フォーム全体のエラー（保存に失敗したなど。§5）も最初のカードの上に置く。カードの外に単独で置く通知なので枠を付ける（[components.md](./components.md) §4-1）。
+
+```tsx
+<form className="max-w-3xl space-y-4">
+  <p className="text-sm text-muted-foreground">
+    <span className="text-destructive-text">*</span> は必須項目です。
+  </p>
+  <Card as="section" aria-labelledby="sec-basic" className="space-y-4">
+    <h2 id="sec-basic">基本情報</h2>
+    <Field ...>...</Field>
+  </Card>
+  <Card as="section" aria-labelledby="sec-addr" className="space-y-4">
+    <h2 id="sec-addr">所在地</h2>
+    <Field ...>...</Field>
+  </Card>
+  {/* ボタン行はカードの外（クラスは components.md §2-3）。キャンセルは secondary */}
+  <div className="...">
+    <Button variant="secondary">キャンセル</Button>
+    <Button type="submit">保存する</Button>
+  </div>
+</form>
+```
+
 ## 3. 必須は `*` で示す
 
 - **必須の項目に `*` を付ける。**「（任意）」は使わない
 - 色は `text-destructive-text`。`text-destructive` は面用のトークンで白地に載せると
   コントラストが足りない（[color.md](./color.md) §1-3）
-- フォーム冒頭に「\* は必須項目です」の凡例を置いてよい（置かなくてもよい）
+- フォーム冒頭に「\* は必須項目です」の凡例を置いてよい（置かなくてもよい）。カード型の画面での置き場所は §2-2
 
 > **`*` と「必須」と「（任意）」を混在させない。** 同じフォーム内で3通りの表現が出ると、
 > 印の有無が何を意味するのか読み取れなくなる。
@@ -104,7 +142,7 @@ export function Field({
 | 位置 | その入力の**すぐ下**。フォーム上部にまとめない |
 | サイズ | `text-sm`（ヘルプテキストと同じ。読ませたいものを小さくしない） |
 | 色 | `text-destructive-text` |
-| 入力欄 | エラー時は `border-destructive` を付ける。**色だけに頼らない**（`*` とエラー文が併存する） |
+| 入力欄 | エラー時は `border-destructive` を付ける。フォーカス中のリングも `ring-destructive` にする（[components.md](./components.md) §1-1 フォーカス表示）。**色だけに頼らない**（`*` とエラー文が併存する） |
 | 文言 | 次の行動を書く（[writing.md](./writing.md) §4） |
 
 ### 5-1. エラーをダイアログにまとめない
@@ -143,16 +181,10 @@ react-hook-form の既定（`mode: "onSubmit"` / `reValidateMode: "onChange"`）
   （[components.md](./components.md)）
 - **未入力を理由に送信ボタンを `disabled` にしない。** 押せない理由が分からず詰まる。
   押させて、エラーを出す
-- ボタンは**右寄せ**。並びは 副次 → 主（主アクションが右端）。間隔は `gap-2`
+- 送信ボタンの行はボタン行（[components.md](./components.md) §2-3）
 - **二重送信を防ぐ**。送信中はボタンを無効化する（`LoadingButton` がやる）
-- 送信に成功したら、**次にどうなるかを示す**（画面遷移、または toast で結果を出す）
-
-```tsx
-<div className="flex justify-end gap-2">
-  <Button variant="outline" onClick={onCancel}>キャンセル</Button>
-  <LoadingButton isLoading={isSubmitting} type="submit">申請を提出する</LoadingButton>
-</div>
-```
+- 送信に成功したら、**次にどうなるかを示す**（画面遷移、またはトーストで結果を出す。トーストの仕様は [components.md](./components.md) の Toast）。
+  送信の失敗・入力エラーはトーストにしない（§5）
 
 ### 7-1. 破壊的な操作は確認する
 
@@ -191,6 +223,10 @@ input[type="month"] {
 }
 ```
 
+### 8-2. Select の矢印は部品側で置く
+
+`Select` は既定の矢印を消して chevron を自前で置く（[components.md](./components.md) §3-1 が正）。
+
 ## 9. 共通コンポーネントに集約する
 
 **`Field` 相当を1つ持ち、フォームは必ずそれを経由する。**
@@ -214,8 +250,9 @@ input[type="month"] {
 - [ ] 検証タイミングを既定から変えていないか（`mode` を書き換えていないか）
 - [ ] 送信ボタンを未入力で `disabled` にしていないか
 - [ ] 送信中の表示があるか（二重送信を防げているか）
-- [ ] ボタンが右寄せ・`gap-2`・主アクションが右端か
-- [ ] 余白がスケール（4/8/16/24px）から外れていないか
+- [ ] 送信ボタンの行が components.md §2-3 どおりか
+- [ ] カード型の画面で、セクションが 2 つ以上ならセクションごとの Card + カードの外のボタン行（キャンセルは `secondary`）になっているか（§2-2）
+- [ ] 画面側の余白（フィールド間・フォームとボタン列の間）が spacing.md §1 の段から外れていないか
 
 ---
 
