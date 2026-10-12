@@ -25,6 +25,7 @@
 | [docs/navigation.md](./docs/navigation.md) | メニューをオブジェクトで組む原則、権限とスコープの扱い、階層の深さ、to B のヘッダー（パンくず・ユーザーメニュー）、スマホ向けナビ |
 | [docs/writing.md](./docs/writing.md) | ラベル・説明文・エラー・ボタンの書き方、文体と句点の統一 |
 | [docs/forms.md](./docs/forms.md) | 1項目の構造、必須の示し方、エラー表示、検証タイミング、送信 |
+| [docs/a11y.md](./docs/a11y.md) | アクセシビリティの目標水準（JIS X 8341-3 AA 相当・WCAG 2.2 AA）、各 docs の a11y ルールの索引、横断ルール、確認方法 |
 
 ## インストール
 
@@ -32,7 +33,7 @@ git dependency で直接インストールする（npm レジストリには pub
 **タグを必ず指定すること。**
 
 ```bash
-pnpm add github:tech-plate/design-system#v0.6.0
+pnpm add github:tech-plate/design-system#v0.7.0
 ```
 
 生成物（`tokens/tokens.css` `tokens/index.mjs` `tokens/index.d.ts` `tailwind/preset.js` `tailwind/v4.css`）は
@@ -51,7 +52,7 @@ HTTPS で 403 になる場合は SSH 形式で指定する。
 
 ```jsonc
 // package.json
-"@tech-plate/design-system": "git+ssh://git@github.com/tech-plate/design-system.git#v0.6.0"
+"@tech-plate/design-system": "git+ssh://git@github.com/tech-plate/design-system.git#v0.7.0"
 ```
 
 **Docker（ローカル開発コンテナ）**
@@ -253,7 +254,7 @@ font-sans  leading-relaxed  leading-tight
 1. **`tokens/tokens.json` を編集する**
 2. `pnpm build`（= `node scripts/build-tokens.mjs`）で生成物を更新する
 3. **`pnpm check`（= `node scripts/check-contrast.mjs`）が通ることを確認する**
-   — WCAG 2.1 AA（テキスト 4.5:1、非テキスト 3:1）未満のペアがあれば exit 1 になる
+   — WCAG 2.2 AA（テキスト 4.5:1、非テキスト 3:1）未満のペアがあれば exit 1 になる
 4. 生成物を含めてコミットし、**タグを切る**（消費側はタグを指して固定する）
 
 ### ⚠️ 手編集禁止
@@ -274,10 +275,10 @@ font-sans  leading-relaxed  leading-tight
 - 各 `X-foreground` vs 対応する `X`（`X` が存在するもの。`*-surface-foreground` vs `*-surface`、`primary` / `secondary` / `muted` / `accent` / `card` / `popover` / `destructive` を含む）と、`X-hover` があれば `X-foreground` vs `X-hover`
 - `foreground` / `muted-foreground` vs `background`
 - `primary-foreground` vs 各 `*-solid`（白グリフを載せる前提のため）
-- `icon` / `icon-strong` vs `background`（非テキストの 3:1）
+- `icon` / `icon-strong` / `input` vs `background`（非テキストの 3:1）
 
 `icon-subtle` / `icon-fill`（装飾専用）と `line-foreground` vs `line`（LINE のブランド規定）は検証から除外し、
-出力に除外理由を出す。`border` / `input`（白地 1.26）は検証対象に入れていない。
+出力に除外理由を出す。`border`（白地 1.26）は区切り線なので検証対象に入れていない。
 
 任意の 2 色を調べることもできる。
 

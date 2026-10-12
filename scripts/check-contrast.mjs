@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * デザイントークンが WCAG 2.1 AA のコントラスト比要件を満たすか検証する。
+ * デザイントークンが WCAG 2.2 AA のコントラスト比要件を満たすか検証する。
  *
  * 色を追加・変更したら必ず実行すること。値は tokens/tokens.json を読んで計算するので、
  * この検証表に色をハードコードしない（値の二重管理を避けるため）。
@@ -16,13 +16,13 @@
  *   - 各 *-solid vs 白グリフ（primary-foreground の light 値 98%。light のみ）
  *   - foreground / muted-foreground vs background
  * 検証するペア（非テキスト 3:1）:
- *   - nonText: true のトークン vs background（アイコン）
+ *   - nonText: true のトークン vs background（アイコン・入力欄の枠）
  * light / dark の両テーマを検証し、dark 値が null のトークンはスキップする。
  *
  * 除外（EXEMPT 行。PASS/FAIL の集計に含めない）は黙ってスキップせず、理由を出力する:
  *   - decorative: true のトークン（装飾専用。非テキスト 3:1 の対象外）
  *   - exempt に理由を持つ前景トークン（外部サービスのブランド規定による色など）
- * border / input は値を変えると全プロダクトの見た目が変わるため、現時点では 3:1 の対象に入れない。
+ * border は区切り線（装飾）なので 3:1 の対象に入れない。
  *
  * 上記に加えて、各 *-surface vs background を INFO 行として表示する（PASS/FAIL の
  * 対象外・集計に含めない）。surface は非テキスト（面）で 4.5:1 の対象ではないため、

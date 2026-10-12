@@ -200,7 +200,7 @@ Button の `secondary` / `outline` / `ghost`、FilterChip（非選択）、ア�
 > `secondary` / `outline` / `ghost` の地は**透明**（`bg-transparent`）。`bg-card`（白）にすると、グレー地（`bg-muted`）の上で白い箱が浮く。
 > hover は §1-6（`hover:bg-foreground/5`）。
 
-> **`outline` はグレー地（`bg-muted`）の上に直接置かない。** 枠の `border-input`（89.8%）がグレー地（96.1%）とほぼ同じで見えなくなる。
+> **`outline` はグレー地（`bg-muted`）の上に直接置かない。** 透明の地がグレーになり、枠の `border-input` との差も白地より小さくなる（白地 3.03:1 → グレー地 2.78:1）。
 > グレー地では、まずボタンをカード（白地）の中に置く。カードに入れられないとき（セクションごとにカードを分けたフォームのボタン行など。[forms.md](./forms.md) §2-2）は、上の表で `outline` の場面（キャンセル・戻るなど）でも `secondary` を使う。
 
 > `line` は LINE 公式のブランド規定色。LINE と関係のない操作に汎用の緑として転用しない。
@@ -388,7 +388,7 @@ Button の `secondary` / `outline` / `ghost`、FilterChip（非選択）、ア�
 
 | ロール | 使う場面 |
 |--------|---------|
-| `alert` | エラー・操作の失敗。読み上げを即座に割り込ませる |
+| `alert` | 操作の失敗（保存できなかった等）。読み上げを即座に割り込ませる。**フォームの検証エラーには付けない**（[a11y.md](./a11y.md) §8-1） |
 | `status` | 緊急性の低い通知（プレビュー表示中、下書きの復元など）。読み上げを中断させない |
 | `note` | 補足（入力済み項目の注記など） |
 
@@ -509,6 +509,7 @@ Button の `secondary` / `outline` / `ghost`、FilterChip（非選択）、ア�
 | フォーカスの閉じ込め | Tab / Shift+Tab がダイアログの外に出ないようにする |
 | 背景のスクロール | 開いている間は body のスクロールを止める。**参照カウント方式**にする（入れ子で開いたときに、閉じる順序によってスクロール不能のまま残るのを防ぐ） |
 | 入れ子 | キー操作は入力を受けた要素に一番近いダイアログだけが処理する（ESC で外側まで一斉に閉じない） |
+| 閉じたとき | 開いた要素にフォーカスを戻す（[a11y.md](./a11y.md) §5-2） |
 
 ### 7-3. 全画面の編集モーダル（スマホ）
 
@@ -652,7 +653,7 @@ EmptyState と対になる部品。体裁を揃える。
 | 重なり | **layout.md のトーストの層**（モーダルより上） |
 | アイコン | 左に種類のアイコン。16px（`size-4`）、`mt-0.5 shrink-0`、`aria-hidden="true"`。色は Alert と同じく solid（下表） |
 | 本文 | `min-w-0 flex-1` |
-| アクション（任意） | 「元に戻す」等。本文の右に置き、押せる領域は 44px（§1-2） |
+| アクション（任意） | 「元に戻す」等。本文の右に置き、押せる領域は 44px（§1-2）。**近道として置くもので、同じことを画面側でもできるようにする**（[a11y.md](./a11y.md) §13） |
 
 | 種類 | アイコンの色 | 使う場面 |
 |------|-------------|---------|
@@ -682,7 +683,7 @@ EmptyState と対になる部品。体裁を揃える。
 | 状態 | クラス |
 |------|--------|
 | 選択中 | `border-primary bg-primary font-semibold text-primary-foreground hover:bg-primary/90` |
-| 非選択 | `border-muted-foreground/60 font-medium text-foreground hover:bg-foreground/5` |
+| 非選択 | `border-input font-medium text-foreground hover:bg-foreground/5` |
 | focus-visible | §1-1 のボタン類のリング（`ring-offset-2` あり） |
 | disabled | `disabled:cursor-not-allowed disabled:opacity-60` |
 
@@ -690,7 +691,6 @@ EmptyState と対になる部品。体裁を揃える。
   見た目を 44px にすると一覧の上で chip が重く見える。
 - 選択状態は `aria-pressed` で伝える。
 - 非選択の hover は §1-6。
-- 非選択の枠線は `border-input` にしない。白地でほとんど見えず、押せる要素だと分からない。
 - chip 群は `flex flex-wrap gap-2`。スマホで収まらない場合は折り返す。
 
 ---
@@ -882,6 +882,7 @@ EmptyState と対になる部品。体裁を揃える。
 ## 17. レビュー用チェックリスト
 
 差分行を対象にチェックする（既存行の全置換は強制しない。**触った画面のついでに直す**）。
+キーボード・読み上げ・拡大など部品をまたぐ項目は [a11y.md](./a11y.md) §16 を併せて当てる。
 
 ### カラー
 

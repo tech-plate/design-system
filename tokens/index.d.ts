@@ -30,7 +30,7 @@ export declare const tokens: {
   readonly "accent": { readonly light: "0 0% 96.1%"; readonly dark: "0 0% 14.9%" }; /* ホバー面・選択中項目の背景 */
   readonly "accent-foreground": { readonly light: "0 0% 9%"; readonly dark: "0 0% 98%" }; /* accent 面の上の文字色 */
   readonly "border": { readonly light: "0 0% 89.8%"; readonly dark: "0 0% 14.9%" }; /* 境界線・区切り線 */
-  readonly "input": { readonly light: "0 0% 89.8%"; readonly dark: "0 0% 14.9%" }; /* フォーム入力の枠線 */
+  readonly "input": { readonly light: "0 0% 58%"; readonly dark: "0 0% 38%" }; /* フォーム入力の枠線（非テキスト 3:1。WCAG 1.4.11） */
   readonly "ring": { readonly light: "0 0% 3.9%"; readonly dark: "0 0% 83.1%" }; /* フォーカスリング */
   readonly "overlay": { readonly light: "0 0% 0%"; readonly dark: "0 0% 0%" }; /* モーダル・ドロワーの暗幕。bg-overlay/50 のように不透明度付きで使う */
   readonly "icon-subtle": { readonly light: "0 0% 63.9%"; readonly dark: null }; /* 空状態の大きな装飾アイコン。装飾専用（3:1 未達のため操作・情報を担うアイコンに使わない） */
