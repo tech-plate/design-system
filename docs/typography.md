@@ -20,7 +20,7 @@ to B（業務画面）と to C（一般利用者向け）で既定が分かれ�
 
 | 役割 | クラス | 行間 | 補足 |
 |------|--------|------|------|
-| ページ見出し（h1 相当） | `text-2xl md:text-3xl font-bold` | `leading-normal md:leading-snug` | スマホ 24px / `md` 以上 30px。**1画面に1つ** |
+| ページ見出し（h1 相当） | `text-2xl md:text-3xl font-bold` | `leading-normal md:leading-snug` | スマホ 24px / `md` 以上 30px。**1画面に1つ**。to B の `<h1>` は上の帯に置き、サイズは [navigation.md](./navigation.md) §9-1 |
 | セクション見出し（h2 相当） | `text-xl font-semibold` | `leading-normal` | Card のタイトル等、まとまりの長 |
 | 小見出し（h3 相当） | `text-lg font-medium` | `leading-normal` | サブセクション |
 | 本文・フォーム値 | `text-base` | 文章は `leading-relaxed` | 既定。多くの入力・表示はこれ。**入力欄の文字は `text-base` 固定**（§1-2） |

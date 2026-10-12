@@ -346,6 +346,9 @@ module.exports = {
 - **非本番環境であることを示す診断表示** — 製品 UI ではないため装飾を許容。
 - **canvas / グラフライブラリ等、クラス名を受け取らない API** — `hsl()` ヘルパー
   （`import { hsl } from "@tech-plate/design-system"`）でトークンから取得し、16進を書かない。
+- **実行時に計算する位置（Menu・ポップオーバー）** — 開いたボタンの位置から計算する値はクラスにできないので、
+  **`top` / `left` / `right` / `bottom` の 4 つだけ**インライン style を許容する。`transform`（位置合わせの平行移動を含む）・
+  色・余白・大きさ・`z-index` はクラスで書く（[components.md](./components.md) §16）。
 
 ## 8. 新しい色を追加・変更するときの手順
 

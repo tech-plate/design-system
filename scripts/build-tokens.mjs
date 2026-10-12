@@ -9,7 +9,7 @@
  *   - tokens/index.mjs    JS から値を参照するための実体（ESM）
  *   - tokens/index.d.ts   その型定義
  *   - tailwind/preset.js  Tailwind v3 preset（CSS 変数を参照するだけの薄いアダプタ + typography）
- *   - tailwind/v4.css     Tailwind v4 @theme inline（同上）+ typography 用の @theme
+ *   - tailwind/v4.css     Tailwind v4 @theme inline（同上）+ typography 用の @theme + cursor の @layer base
  *
  * git dependency で直接インストールされる前提のため、生成物はリポジトリにコミットする
  * （インストール時にビルドが走らなくても動くようにする）。
@@ -294,6 +294,18 @@ ${lines.join("\n")}
 ${ownEntries(json.typography)
   .map(([name, def]) => `  --${name}: ${typographyValue(def)};`)
   .join("\n")}
+}
+
+/*
+ * 押せるものは pointer。v4 の preflight はボタンを cursor: default にするため、
+ * Tailwind 公式の v3→v4 移行ガイドどおり戻す（v3 の preflight は元から pointer なので preset には不要）。
+ * 無効なもの（disabled / aria-disabled="true"）は除き、部品側で cursor-not-allowed を付ける（docs/components.md §1-7）。
+ */
+@layer base {
+  button:not(:disabled):not([aria-disabled="true"]),
+  [role="button"]:not(:disabled):not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
 }
 `;
 }

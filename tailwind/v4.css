@@ -84,3 +84,15 @@
   --leading-relaxed: 1.7;
   --leading-tight: 1.3;
 }
+
+/*
+ * 押せるものは pointer。v4 の preflight はボタンを cursor: default にするため、
+ * Tailwind 公式の v3→v4 移行ガイドどおり戻す（v3 の preflight は元から pointer なので preset には不要）。
+ * 無効なもの（disabled / aria-disabled="true"）は除き、部品側で cursor-not-allowed を付ける（docs/components.md §1-7）。
+ */
+@layer base {
+  button:not(:disabled):not([aria-disabled="true"]),
+  [role="button"]:not(:disabled):not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+}

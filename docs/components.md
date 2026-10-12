@@ -37,12 +37,15 @@
 | ボタン・チップ・タブ・アイコンボタン・ボタン型のリンク | `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2` |
 | 入力欄（Input / Textarea / Select）・Checkbox | `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring` |
 | エラー中の入力欄（`aria-invalid="true"` の Input / Textarea / Select） | 上の入力欄のクラス + `aria-[invalid=true]:focus-visible:ring-destructive` |
+| メニューの項目・タブ列のタブ・スクロール容器（`overflow-*-auto`）の中の押せる項目 | `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring` |
 
 - リングは **2px（`ring-2`）、色は `ring-ring`**。生カラー（`ring-blue-500` 等）にしない。
 - **`outline-none` だけで消さない。** ブラウザ既定の outline を消すときは、必ず上のリングを代わりに付ける。
   消しただけの要素は、キーボード利用者から現在位置が見えなくなる。
 - ボタン類は **`ring-offset-2`** で塗りとリングの間に 2px の隙間を空ける。
   塗り（`bg-primary` 等）とリングが同じ暗さで接すると、リングがボタンの縁と一体化してフォーカスの有無が判別できない。
+- **箱・スクロール容器の中の項目は `ring-inset`** で、リングを項目の内側に描く。外側に出すと、`overflow-x-auto` の列では
+  上下が容器の端で切れ（横だけ指定しても縦も切り取られる）、メニューの箱では枠や隣の項目と重なる。
 - 入力欄は offset を付けない。枠線のすぐ外にリングが乗る方が、どの欄に入力しているかが分かりやすい。
 - **エラー中の入力欄はリングも `ring-destructive` にする。** 枠だけ赤くてリングが通常色だと、フォーカスした途端に
   エラーの手がかりが弱まる。`aria-[invalid=true]:` は属性セレクタの分だけ詳細度が高く、`ring-ring` と併記しても必ず勝つ
@@ -134,7 +137,7 @@
 
 | 状態 | 表現 |
 |------|------|
-| disabled | 専用のグレーを作らず `disabled:opacity-60` + `disabled:cursor-not-allowed`（入力部品は §3） |
+| disabled | 専用のグレーを作らず `disabled:opacity-60` + `disabled:cursor-not-allowed`（入力部品は §3。カーソルは §1-7） |
 | 処理中 | Button は §2 のローディング状態。画面の一部は Spinner、ページ全体は Skeleton（§8） |
 
 ### 1-6. hover の塗り
@@ -145,6 +148,20 @@ Button の `secondary` / `outline` / `ghost`、FilterChip（非選択）、ア�
 - `hover:bg-accent` にしない。`accent` は `muted` と同じ明るさ（96.1%）なので、グレー地（`bg-muted`）の上では hover が見えない。
 - 半透明の `bg-foreground/5` は地の色に関係なく効く（白地での見え方は `accent` とほぼ同じ）。
 - 塗りのある部品（`primary` / `destructive` / `line`、選択中の FilterChip）の hover は各部品の表のとおり。
+- **下線型のタブ・テキストリンク（パンくずの親、ナビのテキストリンク、戻るリンク）は塗らず、文字色だけ変える**
+  （`text-muted-foreground hover:text-foreground`）。下線型のタブに塗りを足すと選択中と紛れ、文字だけのリンクに面が出ると
+  文字より広い範囲がボタンに見える。
+
+### 1-7. カーソル
+
+**押せるものはカーソルを `pointer`、無効なもの（`disabled` / `aria-disabled="true"`）は `not-allowed` にする。**
+
+| 対象 | 規定 |
+|------|------|
+| `button` / `[role="button"]`（無効なものを除く） | core の `tailwind-v4.css` が `cursor: pointer` を設定済み。部品側で書かない（v4 の preflight が `cursor: default` にするため。v3 は preflight が元から `pointer`） |
+| `<button>` 以外に押す処理を持たせた要素（クリックで遷移するテーブルの行など） | 部品側で `cursor-pointer`（§12） |
+| `disabled` の要素 | `disabled:cursor-not-allowed`（§1-5） |
+| `aria-disabled="true"` で無効にした要素（フォーカスを残したいもの） | `aria-disabled:cursor-not-allowed`。core の `pointer` は `aria-disabled="true"` を除外している |
 
 ---
 
@@ -223,7 +240,7 @@ Button の `secondary` / `outline` / `ghost`、FilterChip（非選択）、ア�
 
 - **3 つ以上置きたくなったら、幅に関係なくまず別の置き方を検討する。**
   - アイコンだけのボタンにする（`aria-label` 必須。§2-1）
-  - ヘッダーの右端へ移す（[navigation.md](./navigation.md) §13-4 の条件に合う操作だけ。編集・削除などその画面固有の操作は置けない）
+  - ヘッダーの右端へ移す（[navigation.md](./navigation.md) §14-4 の条件に合う操作だけ。編集・削除などその画面固有の操作は置けない）
   - 頻度の低い操作はメニューにまとめる
 - それでも 3 つになるときは、`md` 未満で 2 行にする。**主要アクションは下の行に単独で全幅**、上の行に残りの 2 つを均等幅で置く。
   DOM の順は 副次 → 主 のまま（上の行 → 下の行）にし、`md` 以上では上の行の囲みを `md:contents` で外して 1 行に並べる。
@@ -642,7 +659,7 @@ EmptyState と対になる部品。体裁を揃える。
 | `success`（既定） | `text-success-solid` | 保存・送信・削除などの完了 |
 | `info` | `text-info-solid` | 完了以外の短いお知らせ |
 
-`--tabbar-offset` はプロダクト側の CSS で定義する（[navigation.md](./navigation.md) §11-3）。
+`--tabbar-offset` はプロダクト側の CSS で定義する（[navigation.md](./navigation.md) §12-3）。
 
 **振る舞い**
 
@@ -680,6 +697,21 @@ EmptyState と対になる部品。体裁を揃える。
 
 ## 11. PageHeader（ページ見出し）
 
+本文の先頭に置く行。**to B と to C で中身が違う**（理由は [design.md](./design.md) §4 と [navigation.md](./navigation.md) §9-1）。
+どちらも戻るリンクは置かない（to B は帯のパンくず、`lg` 未満は帯の戻る。to C は下層ヘッダー。`lg` 以上の to C だけ本文の戻るリンク。[navigation.md](./navigation.md) §14-5）。
+
+### 11-1. to B: 補足と操作の行
+
+`<h1>` は上の帯に置くので、本文には見出しを置かず、**補足情報（左）とページの操作（右）だけ**を並べる。
+
+| 要素 | クラス・規定 |
+|------|------------|
+| 外枠 | `mb-6 flex flex-wrap items-center justify-between gap-4`。**補足も操作も無い画面では行ごと出さない** |
+| 補足（任意） | 左。`flex min-w-0 flex-wrap items-center gap-2 text-sm text-muted-foreground`。会員番号・ふりがな・状態の Badge など、`<h1>` に入れない識別情報 |
+| 操作（任意） | 右。`ml-auto flex min-w-0 max-w-full flex-wrap gap-2`（`shrink-0` にしない。狭い幅では折り返す。補足が無くても右に寄る） |
+
+### 11-2. to C: 見出しの行
+
 | 要素 | クラス・規定 |
 |------|------------|
 | 外枠 | `mb-6 flex flex-wrap items-start justify-between gap-4` |
@@ -687,16 +719,14 @@ EmptyState と対になる部品。体裁を揃える。
 | 説明（任意） | `mt-2 text-base text-muted-foreground` |
 | アクション（任意） | 右側。`min-w-0 max-w-full`（`shrink-0` にしない。狭い幅では自分の幅を縮めて中のボタンを折り返す） |
 
-**見出しを画面に出さないページ**: ボトムタブバーの各タブ直下のページは、いまどのタブにいるかを
-タブバーが示している。同じ語を大きく繰り返すと一覧の上が空くだけなので、**`<h1>` を `sr-only` で残して視覚的にだけ隠す**。
-`<h1>` 自体を消すと、見出しジャンプやページの主題が読み上げで取れなくなる。この場合は説明・アクションも出さない。
-
-1 段入った画面（下層ヘッダーのある画面）で `<h1>` を隠すかは [navigation.md](./navigation.md) §13-2 が正。クラスの対応は次のとおり。
+`<h1>` を `sr-only` にするかは画面で決まる（理由は [navigation.md](./navigation.md) §13・§14-2）。
+タブ直下で `sr-only` にした画面では説明・アクションも出さない。`<h1>` 自体は消さない（見出しジャンプやページの主題が読み上げで取れなくなる）。
 
 | 画面 | `<h1>` のクラス |
 |------|----------------|
-| それ自体が名前を持つ画面 | `max-lg:sr-only` |
-| 一覧から入った個別のレコードの詳細 | なし |
+| タブ直下 | `sr-only` |
+| それ自体が名前を持つ画面（下層ヘッダーに画面名を出す） | `max-lg:sr-only` |
+| 一覧から入った個別のレコードの詳細 | なし（見せる） |
 
 ---
 
@@ -737,7 +767,119 @@ EmptyState と対になる部品。体裁を揃える。
 
 ---
 
-## 14. レビュー用チェックリスト
+## 14. Tabs（画面内のタブ）
+
+1 件のレコード（設定なら 1 つのオブジェクト）の**別の面**を、同じ画面の中で切り替える下線型のタブ。
+
+### 14-1. ルール
+
+- **同じものの別の面を切り替えるときだけ**使う（会員の「基本情報」「予約履歴」、営業時間の設定の「営業時間」「早番遅番」）。
+  別のもの（予約と会員）を並べたいなら、タブにせず別のページ（メニューの項目）にする。
+  メニューの 3 段目・肥大したグループを「画面内のタブに降ろす」とき（[navigation.md](./navigation.md) §4・§6）、
+  保存の境界でタブを分けるとき（[forms.md](./forms.md) §2）もこの部品を使う。
+- **選択中のタブを URL に持つ**（`?tab=history`。既定のタブはパラメータなし）。リロード・共有・ブックマークで同じタブが開く。
+- **置き場所はカードの外**（カード型の画面ならグレー地の上）。中身はタブ列の下にカードとして置く。タブ列をカードの中に入れない。
+- **タブ 1 つにカードが 1 枚だけなら、そのカードの見出しを出さない。** タブ名と同じ語の繰り返しになる。
+  見出しの無いカードは `<div>` にし（§6 の `<section>` は見出しを持つ区画のため）、区画の名前は tabpanel がタブから取る。
+- 件数を添えるときはタブ名の右に小さく数字だけ（下表）。StatusBadge の count（§5-3）にしない。
+- **入りきらないときは横スクロール**（`overflow-x-auto`）。折り返さない（2 段になると、下線がどの段のタブのものか分からない）。
+
+### 14-2. 仕様
+
+**共通**: `-mb-px inline-flex min-h-11 shrink-0 items-center gap-2 border-b-2 px-4 text-sm whitespace-nowrap` + §1-1 の `ring-inset` のリング（タブ列は横スクロールの容器なので）
+
+| 要素・状態 | クラス |
+|------------|--------|
+| タブ列 | `flex overflow-x-auto border-b border-border` |
+| 選択中 | 共通 + `border-foreground font-semibold text-foreground` |
+| 非選択 | 共通 + `border-transparent font-medium text-muted-foreground hover:text-foreground` |
+| 件数（任意） | タブ名の右に `text-xs tabular-nums text-muted-foreground` |
+| 中身 | タブ列の下に `space-y-4` 相当の間隔でカードを置く |
+
+- 選択中は**太さと色の両方**で示し、下線（`border-b-2 border-foreground`）を足す（色だけで状態を伝えない。[navigation.md](./navigation.md) §12-2 と同じ）。
+- `-mb-px` で各タブの下線をタブ列の `border-b` に重ねる。
+- hover は文字色だけ変え、塗らない（§1-6）。
+- ナビと同じくブランド色（`text-primary`）を使わない。
+
+### 14-3. 振る舞い（ARIA）
+
+実装は次の 2 通りのどちらか。**1 つのプロダクトの中ではどちらかに揃える。**
+
+| 実装 | 規定 |
+|------|------|
+| A. タブ（既定） | タブ列 `role="tablist"` + `aria-label`、各タブ `<button role="tab">` + `aria-selected` + `aria-controls`、中身 `role="tabpanel"` + `aria-labelledby`。フォーカスを受けるのは選択中のタブだけ（`tabindex="0"`、他は `-1`）。**←→ キーで隣のタブへ移って選択**（端で反対側に回る。Home / End で端へ）。選択を変えたら URL のクエリを書き換える |
+| B. リンク | 各タブを `<a href="?tab=…">` にし、選択中に `aria-current="page"`。タブ列は `<nav aria-label>`。`role="tab"` と矢印キーは付けない（Tab キーで移動する） |
+
+- B は切り替えのたびにページ遷移として扱うフレームワーク（サーバーで中身を描くもの）向け。A と B の ARIA を混ぜない
+  （`role="tab"` のリンク、`aria-selected` と `aria-current` の併用をしない）。
+
+---
+
+## 15. DescriptionList（詳細の項目と値）
+
+レコードの詳細画面で、項目名と値の組を並べる。`<dl>` で書く。
+
+| 要素 | クラス・規定 |
+|------|------------|
+| `<dl>` | `grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2`（スマホ 1 列、`md` 以上 2 列。項目間 16px） |
+| 1 項目 | `<div class="space-y-1">` で `<dt>` と `<dd>` を包む（項目名と値の間 4px） |
+| 長い値の項目（住所・備考・メモ） | 1 項目 + `md:col-span-2` |
+| 項目名 `<dt>` | `text-sm leading-tight text-muted-foreground`。値の**上**に置く |
+| 値 `<dd>` | `text-base leading-relaxed break-words text-foreground`（[typography.md](./typography.md) の本文・フォーム値） |
+| メール・URL の値 | 値 + `break-all`（区切りの無い長い英数字を途中で折る） |
+
+- **縦積み**（項目名が上、値が下）。項目名を左・値を右の横並びにしない（項目名の長さで値の位置がばらつき、スマホで崩れる）。
+- **空の値は「—」**（全角ダッシュ 1 文字）。「未設定」「なし」「-」と書き分けない。
+- 長い値は**折り返す**。`truncate` しない（詳細画面は全文を読む場所）。
+- **編集はカード単位。** カードの見出しの横に `secondary` の Button（§2）を 1 つ置き、カードの項目をまとめて編集する。
+  項目ごとに編集ボタンを並べない。
+
+---
+
+## 16. Menu（ドロップダウンメニュー）
+
+ボタンから開く、操作の一覧。行のその他の操作（`…`）や、ヘッダーのユーザーメニュー（[navigation.md](./navigation.md) §9-5）で使う。
+
+### 16-1. ルール
+
+- **操作が 1 つならメニューにせずボタンを置く。2 つ以上のときだけメニューにまとめる。** メニューに隠した操作は見つけにくい。
+- 項目に**アイコンを付けない**（文字だけ）。
+- **破壊的な項目**（削除・取り消し）は §16-2 の表の色にし、**メニューの一番下に区切り線を挟んで**置く。
+  押したら確認ダイアログ（§7-4）を出す。メニューの中で確認しない。
+- 通知の一覧のように、操作ではなく情報を出すもの（ポップオーバー）も、箱・重なり・portal・閉じ方はこの節に従う（`role="menu"` は付けない）。
+
+### 16-2. 仕様
+
+| 要素 | クラス・規定 |
+|------|------------|
+| 箱 | `min-w-40 rounded-md border border-border bg-popover py-1 text-popover-foreground shadow-md`（影は §1-3 の 1 段目） |
+| 項目 | `flex min-h-11 w-full items-center px-3 text-left text-sm whitespace-nowrap text-foreground hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring` |
+| 破壊的な項目 | 項目の `text-foreground` を `text-destructive-text` に置き換える |
+| 区切り線 | 破壊的な項目の前に `my-1 border-t border-border`（`role="separator"`） |
+| 位置 | 開いたボタンの 4px 下。画面の右側から開くものは右端を揃える。揃えると画面の外にはみ出す幅なら、画面の端から 16px の位置まで寄せる |
+| 重なり | [layout.md](./layout.md) §4 のメニュー・ポップオーバーの層 |
+
+- 項目の hover は §1-6、フォーカスのリングは §1-1 の `ring-inset` の行。
+- **どこから開いても portal で body 直下に出し**、`position: fixed` で開いたボタンの位置に合わせる。
+  開いたボタンの近くに置くと、表のスクロール領域やモーダルの箱（`overflow-y-auto`）で切れる。
+- 位置はインライン style で書いてよい（[color.md](./color.md) §7 の例外。使えるプロパティもそこが正）。
+  スクロール・リサイズでは位置を追従させる。
+- 項目からモーダル・確認ダイアログを開くときは、メニューを閉じてから開く。メニューの層はモーダルより上なので、開いたままだとダイアログに重なる。
+
+### 16-3. 振る舞い
+
+| 項目 | 規定 |
+|------|------|
+| 開くボタン | `aria-haspopup="menu"`、`aria-expanded`。アイコンだけのボタンは `aria-label` 必須（§2） |
+| ロール | 箱 `role="menu"`、項目 `role="menuitem"`、区切り線 `role="separator"` |
+| 開いたとき | 最初の項目にフォーカスを移す |
+| キー | ↑↓ で項目を移動（端で反対側に回る）、Home / End で端へ、Enter で実行、**Esc で閉じる** |
+| 閉じたとき | **開いたボタンにフォーカスを戻す**（Esc・項目の実行のどちらでも。項目から確認ダイアログを開いたときは、ダイアログが閉じたあとに戻す） |
+| 外側のクリック | 閉じる |
+
+---
+
+## 17. レビュー用チェックリスト
 
 差分行を対象にチェックする（既存行の全置換は強制しない。**触った画面のついでに直す**）。
 
@@ -748,7 +890,7 @@ EmptyState と対になる部品。体裁を揃える。
 - [ ] 状態色をコンポーネントに直書きしていないか → constants の色マップへ
 - [ ] `*-surface` を使う箇所で `*-surface-foreground` とセットになっているか
 - [ ] 色つきベタ塗りボタンを作っていないか（塗りは `primary` / `destructive` / LINE に関わる操作の `line` のみ）
-- [ ] 16進カラー・インライン style が例外（PDF・フォールバック画面・canvas 等）以外で使われていないか
+- [ ] 16進カラー・インライン style が [color.md](./color.md) §7 の例外以外で使われていないか
 - [ ] 新しい色を足した場合、`pnpm check`（コントラスト検証）を通したか
 
 ### タイポグラフィ
@@ -778,18 +920,23 @@ EmptyState と対になる部品。体裁を揃える。
 - [ ] 通知・バナーが Card の中では枠なし、カードの外に単独で置くときだけトーンの枠色の `border` で囲まれているか
 - [ ] トーストを操作完了の短い通知だけに使っているか（対応が必要なエラー・入力エラーをトーストで出していないか）
 - [ ] 状態で切り替えるクラスを、既定のクラスに足さず置き換えているか（`border-input` と `border-destructive` が同居していないか）
+- [ ] Tabs を同じものの別の面の切り替えだけに使い、選択中のタブを URL に持っているか。カード 1 枚だけのタブでカードの見出しを重ねていないか
+- [ ] DescriptionList の空の値が「—」に揃っているか（「未設定」「なし」が混ざっていないか）。メール・URL に `break-all` があるか
+- [ ] 操作が 1 つだけの箇所をメニューにしていないか。メニューの項目にアイコンが無く、破壊的な項目が区切り線の下にあるか
+- [ ] メニュー・ポップオーバーを portal で body 直下に出しているか。Esc で閉じて開いたボタンにフォーカスが戻るか
+- [ ] 押せる要素のカーソルが `pointer` か（`<button>` 以外に押す処理を持たせた要素に `cursor-pointer` があるか）
 
 ### フォーカス・タッチターゲット
 
 - [ ] フォーカス表示が `focus-visible` で、`ring-2 ring-ring` のリングがあるか（`outline-none` だけで消していないか）
 - [ ] エラー中（`aria-invalid="true"`）の入力欄のリングが `ring-destructive` になっているか
-- [ ] 塗りのあるボタン類に `ring-offset-2` があるか
+- [ ] 塗りのあるボタン類に `ring-offset-2` があるか（メニューの項目・タブ・スクロール容器の中の項目は `ring-inset`）
 - [ ] 押せる要素が 44px 以上か（`min-h-11` / `size-11`。見た目を小さくする場合は疑似要素で当たり判定を広げているか）
 - [ ] 入力欄の高さが `min-h-11` 以上か
 
 ### 重なり・影
 
-- [ ] モーダル・ナビ・確認ダイアログ・トーストの z-index が [layout.md](./layout.md) の表の値か（`z-50` 等に丸めていないか）
+- [ ] ナビ・メニュー・モーダル・確認ダイアログ・トーストの z-index が [layout.md](./layout.md) の表の値か（`z-50` 等に丸めていないか）
 - [ ] 暗幕が layout.md の規定どおりか（生カラーの `bg-black/50` にしていないか）
 - [ ] Card・パネル・固定ヘッダー・タブバーに shadow を足していないか（shadow は浮いているものだけ）
 - [ ] 影が 2 段（メニュー・ポップオーバー `shadow-md` / モーダル・ダイアログ `shadow-lg`）のどちらかか

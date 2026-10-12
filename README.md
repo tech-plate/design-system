@@ -16,13 +16,13 @@
 
 | ドキュメント | 内容 |
 |------------|------|
-| [docs/design.md](./docs/design.md) | **入口**。読む順番、各 docs の索引、to B / to C で分かれるルール、新しいサービスを始める手順 |
+| [docs/design.md](./docs/design.md) | **入口**。方針（無駄な要素を置かない）、読む順番、各 docs の索引、to B / to C で分かれるルール、新しいサービスを始める手順 |
 | [docs/color.md](./docs/color.md) | トークンカタログ（アイコン用グレー・favorite・LINE 公式色を含む）、3トーン体系、生カラー禁止、product layer の拡張方法 |
 | [docs/typography.md](./docs/typography.md) | フォント、Tailwind 標準スケールと行間の用途マップ、サイズの下限、段落間と行長、mono の使いどころ |
 | [docs/spacing.md](./docs/spacing.md) | 4px グリッド 5 段（4〜32px）の用途マップ |
 | [docs/layout.md](./docs/layout.md) | ブレークポイント、最大幅、ページの地色、z-index、タッチターゲット、暗幕、横スクロール |
 | [docs/components.md](./docs/components.md) | 部品ごとの仕様（variant・サイズ・状態）とルール、フォーカス表示、影、アイコン、レビューチェックリスト |
-| [docs/navigation.md](./docs/navigation.md) | メニューをオブジェクトで組む原則、権限とスコープの扱い、階層の深さ、スマホ向けナビ |
+| [docs/navigation.md](./docs/navigation.md) | メニューをオブジェクトで組む原則、権限とスコープの扱い、階層の深さ、to B のヘッダー（パンくず・ユーザーメニュー）、スマホ向けナビ |
 | [docs/writing.md](./docs/writing.md) | ラベル・説明文・エラー・ボタンの書き方、文体と句点の統一 |
 | [docs/forms.md](./docs/forms.md) | 1項目の構造、必須の示し方、エラー表示、検証タイミング、送信 |
 
@@ -166,6 +166,8 @@ import しているので、1 行で完結する。
   **クラスベースの `dark:` バリアント**に揃えている
 - `@theme inline` による `--color-*` / `--radius-*` の定義
 - `--font-sans`（Noto Sans JP + システムフォールバック）と `--leading-relaxed: 1.7` / `--leading-tight: 1.3` の上書き
+- `button` / `[role="button"]`（無効なものを除く）を `cursor: pointer` にする `@layer base`
+  （理由は [docs/components.md](./docs/components.md) §1-7。プロダクト側で同じ指定を書かない）
 
 ### 2. プロダクト固有の色を足す
 
