@@ -1,0 +1,33 @@
+name: public-safety
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-safety-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: メールアドレス(作者欄・コミットメッセージ・ファイル・PR 本文)
+        env:
+          PR_TEXT: ${{ github.event.pull_request.title }} ${{ github.event.pull_request.body }}
+        run: bash scripts/check-public-safety.sh
+
+      # gitleaks-action は org のリポジトリだとライセンスが要るので CLI のイメージを直接使う。
+      # PR 本文の編集だけではコードが変わらないので回さない
+      - name: 秘密情報(gitleaks、全履歴)
+        if: github.event.action != 'edited'
+        run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.21.2 git /repo --redact --verbose
