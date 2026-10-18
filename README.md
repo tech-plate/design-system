@@ -338,6 +338,18 @@ node scripts/check-contrast.mjs "#ffffff" "142 71.8% 29.2%"
 **そのプロダクトでコントラストを実測すること**。core は根拠のない値を持たない方針のため、
 実測済みの値が用意できるまで dark は `null` のままにしている。
 
+## 公開リポジトリとしての注意
+
+一度公開した履歴は clone・ミラーに残り、後から消せない。次のものはコード・コミット・PR 本文・issue のどこにも書かない。
+
+- **個人のメールアドレス**: コミットの作者欄・`Co-Authored-By` も含む。作者欄は GitHub の代用アドレス `<ID>+<ユーザー名>@users.noreply.github.com`(Settings → Emails に出る)にする。clone ごとの設定は漏れるので、グローバルの `~/.gitconfig` で当てる(`[includeIf "gitdir:~/tech/techplate/"]` で noreply を設定したファイルを読み込む)。同じ Emails の画面で「Keep my email addresses private」と「Block command line pushes that expose my email」もオンにする
+- **顧客名・顧客のロゴやブランド素材**: プロダクト固有の素材は各プロダクト側に置く(上の「core に入れないもの」と同じ)
+- **秘密情報**: トークン・パスワード・鍵
+
+CI `public-safety`(`.github/workflows/public-safety.yml`)が、作者欄・タグ・コミットメッセージ・ファイル・PR 本文のメールアドレス(`scripts/check-public-safety.sh`、手元でも `bash scripts/check-public-safety.sh` で実行可)と、全履歴の秘密情報(gitleaks)を検査する。
+CI は push・PR を作った**後**に走るので、検出した時点で内容はすでに公開されている。止める役は上の個人設定と GitHub の Push protection が担い、CI は取りこぼしに気づくための網。issue と PR のコメントは検査しない。
+2026-10-19、public 化の前に作者欄の個人アドレスを消すため履歴を書き換え、リポジトリを作り直した(旧リポジトリは private の `tech-plate/design-system-archive`。PR #1〜#3 の議論はそちら)。
+
 ## ライセンス
 
 MIT
