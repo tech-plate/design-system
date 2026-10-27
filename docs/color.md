@@ -69,14 +69,14 @@ blue / green / yellow を複数の意味に流用すると（リンクも情報�
 | 語彙 | text | surface / surface-foreground | solid | DEFAULT クラス |
 |------|------|------------------------------|-------|---------------|
 | `interactive` | ✅ (6.64) | ✅ (7.15) | ✅ (5.12) | `text-interactive` = text |
-| `success` | ✅ (5.02) | ✅ (6.49) | ✅ (5.02) | `text-success` = text |
-| `warning` | ✅ (5.02) | ✅ (6.32) | ✅ (5.02) | `text-warning` = text |
-| `info` | ✅ (7.18) | ✅ (9.56) | ✅ (7.18) | `text-info` = text |
+| `success` | ✅ (5.02 / dark 11.31) | ✅ (6.49 / dark 8.05) | ✅ (5.02 / dark 5.02) | `text-success` = text |
+| `warning` | ✅ (5.02 / dark 7.41) | ✅ (6.32 / dark 6.39) | ✅ (5.02 / dark 5.02) | `text-warning` = text |
+| `info` | ✅ (7.18 / dark 8.48) | ✅ (9.56 / dark 6.97) | ✅ (7.18 / dark 5.39) | `text-info` = text |
 | `inactive` | — | ✅ (light 6.10 / dark 5.78) | — | なし |
 | `favorite` | ✅ (5.19) | ✅ (5.14) | ✅ (5.19) | `text-favorite` = text |
 | `destructive` | ✅ (6.47) | ✅ (6.80) | `bg-destructive` (4.63) | `bg-destructive` = ベタ塗り面 |
 
-括弧内は実測コントラスト比。値は `tokens/tokens.json` の `contrast` フィールドが正。
+括弧内は実測コントラスト比（dark はダークテーマの値。dark 値のある語彙だけ）。値は `tokens/tokens.json` の `contrast` / `contrastDark` フィールドが正。
 solid の比は純白のグリフを載せた値。`pnpm check` は白グリフを `primary-foreground`（98%）で測るため少し低く出る
 （例: `favorite-solid` は 4.97）。いずれも 4.5:1 以上。
 
@@ -125,6 +125,7 @@ solid はアイコン・ドット・インジケータ等の小面積オブジ�
 ## 3. 生カラー禁止と置換表
 
 `text-gray-700` のような Tailwind の生カラーパレットは使わない。
+消費側では同梱の lint（`npx design-system-lint src`）で検出できる（使い方・例外の書き方は [README](../README.md#生カラーの-lintdesign-system-lint)）。
 
 | 用途 | ❌ 生カラー | ✅ トークン |
 |------|-----------|------------|
@@ -355,7 +356,7 @@ module.exports = {
 1. `tokens/tokens.json` を編集する（`tokens.css` を直接編集しない）
 2. `pnpm build` で生成物を更新する
 3. **`pnpm check` を通す** — AA 4.5:1 未満があれば exit 1 になる
-4. 生成物を含めてコミットし、タグを切る
+4. 生成物を含めてコミットし、`version` を上げて npm に publish する（手順は [README](../README.md#トークンを変更する手順)）
 
 `pnpm check` は次のペアを light / dark 両方で検証する（dark 値が無いトークンはスキップ）。
 
@@ -363,12 +364,13 @@ module.exports = {
 
 - 各 `*-text` / `interactive-visited` vs `background`
 - 各 `X-foreground` vs 対応する `X`（`X` が存在するもの。`*-surface-foreground` vs `*-surface`、`primary` / `secondary` / `muted` / `accent` / `card` / `popover` / `destructive` を含む）。`X-hover` があれば `X-foreground` vs `X-hover` も
-- 各 `*-solid` vs 白グリフ（`primary-foreground` の light 値 98%。light のみ）
+- 各 `*-solid` vs 白グリフ（`primary-foreground` の light 値 98%。dark でもグリフは白なので light 値で測る）
 - `foreground` / `muted-foreground` vs `background`
 
 非テキスト（3:1、WCAG 1.4.11）:
 
 - `nonText: true` のトークン（`icon` / `icon-strong` / `input`）vs `background`
+- 各 `*-solid` vs `background`（dark のみ。ドット等の小面積オブジェクトが暗い地から見分けられるか。light は白グリフの 4.5:1 で包含される）
 
 除外（`EXEMPT` 行。黙ってスキップせず「除外: 理由」を出力し、PASS/FAIL の集計に含めない）:
 
@@ -382,9 +384,27 @@ module.exports = {
 
 ## 9. ダークモードの対応範囲
 
-ニュートラル（アイコン用グレーを除く。`overlay` を含む）・`inactive`・`destructive` の DEFAULT / foreground・LINE 公式色には dark 値があるが、
-**アイコン用グレー 4 階調、拡張セマンティックの text / surface / solid（`interactive` `success` `warning` `info` `favorite`）、
+ニュートラル（アイコン用グレーを除く。`overlay` を含む）・`inactive`・`destructive` の DEFAULT / foreground・LINE 公式色・
+**`success` / `warning` / `info` の text / surface / surface-foreground / solid** には dark 値がある。
+**アイコン用グレー 4 階調、`interactive` と `favorite` の text / surface / solid、
 `interactive-visited`、`destructive` の text / surface トーンには dark 値が無い**（`tokens.json` で `dark: null`）。
 
-ダーク画面でこれらを使う場合は、プロダクト側で `.dark { --success-text: ...; }` のように上書きし、
+### success / warning / info の dark 値の作り方
+
+各トーンの light 値と**同じ色相（H）・彩度（S）のまま、明度（L）だけ**を変える。
+色相を変えると、`info` を `interactive` と `success` から離している取り決め（§4）が dark で崩れるため。
+
+| トーン | dark の L | 理由 |
+|--------|-----------|------|
+| text | 55% | 暗い `background` の上で 4.5:1 を十分に超える明るさ（7.41〜11.31） |
+| surface | 14% | 暗い地から面として見分けられる程度（`background` に対して 1.70〜1.72。`inactive-surface` の dark は 1.35） |
+| surface-foreground | 75% | surface の上で 4.5:1 を超える明るさ（6.39〜8.05） |
+| solid | 白グリフに 4.5:1、`background` に 3:1 を両立する L | `success` / `warning` は light 値のままで両方を満たすので同値。`info` は light の L27.1% だと `background` に 2.76 で足りないので L33% |
+
+surface の上に載せるのは必ず `*-surface-foreground`（§1-3）。dark でも組み合わせを変えない。
+
+### dark 値の無いトークン
+
+ダーク画面でこれらを使う場合は、プロダクト側で `.dark { --interactive-text: ...; }` のように上書きし、
 **そのプロダクトでコントラストを実測すること**。core は勝手な値を持たない。
+core に dark 値を足すときは、上の作り方に揃え、`pnpm check` を dark でも通す。

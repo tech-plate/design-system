@@ -35,9 +35,9 @@
 | [color.md](./color.md) | トークンカタログ、3 トーン体系、生カラー禁止、product layer での色の足し方 |
 | [typography.md](./typography.md) | フォント、文字サイズと行間の用途マップ、サイズの下限、段落間と行長 |
 | [spacing.md](./spacing.md) | 余白の 5 段、用途別の指定、角丸 |
-| [layout.md](./layout.md) | ブレークポイント、最大幅、ページの地色、z-index、タッチターゲット、暗幕、横スクロール |
+| [layout.md](./layout.md) | ブレークポイント、テーブルのスマホ表示（カード表示）、最大幅、ページの地色、z-index、タッチターゲット、暗幕、横スクロール |
 | [components.md](./components.md) | 部品ごとの仕様とルール、フォーカス表示、影、アイコン、レビュー用チェックリスト |
-| [forms.md](./forms.md) | 1 項目の構造、必須の示し方、エラー表示、検証タイミング、送信 |
+| [forms.md](./forms.md) | 1 項目の構造、必須の示し方、エラー表示、検証タイミング、送信、入力部品の選択（候補が多い選択の Combobox） |
 | [navigation.md](./navigation.md) | メニューをオブジェクトで組む原則、権限とスコープ、to B のヘッダー（パンくず・ページ名・ユーザーメニュー）、スマホ向けナビ |
 | [writing.md](./writing.md) | ラベル・説明文・エラー・ボタンの書き方、文体と表記の統一 |
 | [a11y.md](./a11y.md) | 目標水準（JIS X 8341-3 AA 相当・WCAG 2.2 AA）、各 docs の a11y ルールの索引、ページの骨格・見出し・キーボード・通知・拡大などの横断ルール、確認方法 |
@@ -71,6 +71,7 @@ to B でも文章（説明文・お知らせ）は `leading-relaxed`、to C で�
 ## 6. 新しいサービスを始めるときの手順
 
 - [ ] トークンを取り込む（[README のインストール節](../README.md#インストール)と、v3 / v4 の導入手順）
+- [ ] 生カラーの lint（`design-system-lint`）を消費側の `package.json` と CI に入れる（[README](../README.md#生カラーの-lintdesign-system-lint)）
 - [ ] フォントを配信する。Noto Sans JP の配信はプロダクトの責務（[typography.md](./typography.md)）
 - [ ] ボトムタブバーを使うなら、プロダクト側の CSS で `--tabbar-height: 56px` と `--tabbar-offset` を定義する（core には無い。
   タブバー・本文の下余白・トーストの位置がこの変数を参照する。[navigation.md](./navigation.md) §12-3）
