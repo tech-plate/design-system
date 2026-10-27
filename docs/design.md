@@ -50,7 +50,7 @@
 |------|------------------|------------------------|
 | 主な利用環境（[layout.md](./layout.md)） | デスクトップ中心 | スマホ中心（モバイルファースト） |
 | ページの地色（[layout.md](./layout.md) §3） | **原則カード型** | 画面の作り（カード型かどうか）で決める |
-| ナビの骨格（[navigation.md](./navigation.md)） | サイドバー + 上の帯（パンくず + ページ名・通知・ユーザーメニュー。navigation.md §9） | ボトムタブバー + 下層ヘッダー（戻る + 画面名）。`lg` 以上はヘッダーのナビ |
+| ナビの骨格（[navigation.md](./navigation.md)） | サイドバー + 上の帯（パンくず + ページ名・ヘルプ・通知・ユーザーメニュー。navigation.md §9） | ボトムタブバー + 下層ヘッダー（戻る + 画面名）。`lg` 以上はヘッダーのナビ |
 | 文字の既定（[typography.md](./typography.md)） | 迷ったら `text-sm` | 本文は `text-base`、補助が `text-sm` |
 | 行間の既定（[typography.md](./typography.md)） | 密な箇所は `leading-tight` | 文章は `leading-relaxed` |
 | タッチターゲット（[layout.md](./layout.md)） | 44px。密な一覧の行アクションのみ 32px 可 | 44px。例外なし |
