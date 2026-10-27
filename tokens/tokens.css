@@ -74,18 +74,6 @@
  *   --interactive-surface-foreground
  *   --interactive-solid
  *   --interactive-visited
- *   --success-text
- *   --success-surface
- *   --success-surface-foreground
- *   --success-solid
- *   --warning-text
- *   --warning-surface
- *   --warning-surface-foreground
- *   --warning-solid
- *   --info-text
- *   --info-surface
- *   --info-surface-foreground
- *   --info-solid
  *   --favorite-text
  *   --favorite-surface
  *   --favorite-surface-foreground
@@ -113,6 +101,18 @@
   --input: 0 0% 38%;
   --ring: 0 0% 83.1%;
   --overlay: 0 0% 0%;
+  --success-text: 142 71.8% 55%;
+  --success-surface: 141 84.5% 14%;
+  --success-surface-foreground: 143 64.2% 75%;
+  --success-solid: 142 71.8% 29.2%;
+  --warning-text: 26 90.5% 55%;
+  --warning-surface: 48 96.5% 14%;
+  --warning-surface-foreground: 23 82.5% 75%;
+  --warning-solid: 26 90.5% 37.1%;
+  --info-text: 194 69.6% 55%;
+  --info-surface: 185 95.9% 14%;
+  --info-surface-foreground: 196 63.6% 75%;
+  --info-solid: 194 69.6% 33%;
   --inactive-surface: 215 27.9% 16.9%;
   --inactive-surface-foreground: 217.9 10.6% 64.9%;
   --destructive: 0 62.8% 30.6%;

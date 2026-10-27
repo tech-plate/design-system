@@ -1,6 +1,7 @@
 # @tech-plate/design-system
 
 全社横断のデザインシステム。**デザイントークン（CSS 変数）とデザインルール（docs）だけ**を配布する。
+ルールのうち機械で止められる生カラー禁止だけは、lint（`design-system-lint`）も同梱する。
 
 ## このリポジトリの位置づけ
 
@@ -20,69 +21,27 @@
 | [docs/color.md](./docs/color.md) | トークンカタログ（アイコン用グレー・favorite・LINE 公式色を含む）、3トーン体系、生カラー禁止、product layer の拡張方法 |
 | [docs/typography.md](./docs/typography.md) | フォント、Tailwind 標準スケールと行間の用途マップ、サイズの下限、段落間と行長、mono の使いどころ |
 | [docs/spacing.md](./docs/spacing.md) | 4px グリッド 5 段（4〜32px）の用途マップ |
-| [docs/layout.md](./docs/layout.md) | ブレークポイント、最大幅、ページの地色、z-index、タッチターゲット、暗幕、横スクロール |
+| [docs/layout.md](./docs/layout.md) | ブレークポイント、テーブルのスマホ表示（カード表示）、最大幅、ページの地色、z-index、タッチターゲット、暗幕、横スクロール |
 | [docs/components.md](./docs/components.md) | 部品ごとの仕様（variant・サイズ・状態）とルール、フォーカス表示、影、アイコン、レビューチェックリスト |
 | [docs/navigation.md](./docs/navigation.md) | メニューをオブジェクトで組む原則、権限とスコープの扱い、階層の深さ、to B のヘッダー（パンくず・ユーザーメニュー）、スマホ向けナビ |
 | [docs/writing.md](./docs/writing.md) | ラベル・説明文・エラー・ボタンの書き方、文体と句点の統一 |
-| [docs/forms.md](./docs/forms.md) | 1項目の構造、必須の示し方、エラー表示、検証タイミング、送信 |
+| [docs/forms.md](./docs/forms.md) | 1項目の構造、必須の示し方、エラー表示、検証タイミング、送信、入力部品の選択（候補が多い選択の Combobox） |
 | [docs/a11y.md](./docs/a11y.md) | アクセシビリティの目標水準（JIS X 8341-3 AA 相当・WCAG 2.2 AA）、各 docs の a11y ルールの索引、横断ルール、確認方法 |
 
 ## インストール
 
-git dependency で直接インストールする（npm レジストリには publish しない）。
-**タグを必ず指定すること。**
+npm レジストリ（public）から入れる。**`^0.x` で範囲を指定し、上げるときは差分（トークン値・docs）を読んでから上げる。**
 
 ```bash
-pnpm add github:tech-plate/design-system#v0.7.0
+pnpm add @tech-plate/design-system@^0.8.0
 ```
+
+0.x の間は、`^0.8.0` は 0.8.x だけを受け入れる（0.9.0 には自動で上がらない）。
+トークンの値や docs のルールが変わるのはマイナー（0.8 → 0.9）なので、上げるときに消費側で見た目とコントラストを確かめる。
 
 生成物（`tokens/tokens.css` `tokens/index.mjs` `tokens/index.d.ts` `tailwind/preset.js` `tailwind/v4.css`）は
-**リポジトリにコミット済み**なので、インストール時にビルドは走らない（`prepare` スクリプトに依存しない）。
-ランタイム依存はゼロ。
-
-### private リポジトリのため認証が要る
-
-このリポジトリは private なので、`git clone` できる認証情報が無い環境ではインストールが失敗する。
-環境ごとに次を用意する。
-
-**ローカル（mac）**
-
-`gh auth login` 済み、または SSH 鍵が GitHub に登録済みなら追加設定は不要。
-HTTPS で 403 になる場合は SSH 形式で指定する。
-
-```jsonc
-// package.json
-"@tech-plate/design-system": "git+ssh://git@github.com/tech-plate/design-system.git#v0.7.0"
-```
-
-**Docker（ローカル開発コンテナ）**
-
-コンテナには認証情報が無い。ホストの認証を渡すか、
-`~/.gitconfig` の `url.<...>.insteadOf` でトークン付き URL に書き換える。
-コンテナ内で `pnpm install` する構成なら、`GITHUB_TOKEN` を渡したうえで次を実行する。
-
-```sh
-git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
-```
-
-**Vercel**
-
-Vercel は「デプロイ対象のリポジトリ」しかクローン権限を持たないため、**他の private リポジトリへの
-git dependency は素のままでは失敗する**。プロジェクトの環境変数に read-only の
-Personal Access Token（または GitHub App のトークン）を `GITHUB_TOKEN` として登録し、
-Install Command を次のように上書きする。
-
-```sh
-git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/" && pnpm install
-```
-
-**GitHub Actions**
-
-同一 org 内の別リポジトリは `secrets.GITHUB_TOKEN` では読めない。
-org 用の PAT か GitHub App トークンを secret に登録して、上記と同じ `insteadOf` を設定する。
-
-> この手当てを消費側プロジェクトごとに1回ずつ入れる必要がある。
-> 運用が重くなるようなら、中身に秘密情報が無いので public 化を再検討してよい。
+**パッケージに同梱済み**なので、インストール時にビルドは走らない。ランタイム依存はゼロ。
+認証も要らない（public パッケージなので、Docker・Vercel・GitHub Actions でも追加の設定なしで入る）。
 
 ## 導入手順: Tailwind CSS v3
 
@@ -216,7 +175,7 @@ tokens["success-text"].light;  // → "142 71.8% 29.2%"
 ```
 
 実体は素の ESM（`tokens/index.mjs`）＋型定義（`tokens/index.d.ts`）。
-git dependency では消費側のトランスパイルを前提にできないため、TypeScript のままでは配らない。
+消費側のトランスパイルを前提にしないため、TypeScript のままでは配らない。
 `transpilePackages` の設定は不要。
 
 ## 利用できるクラス（抜粋）
@@ -255,7 +214,7 @@ font-sans  leading-relaxed  leading-tight
 2. `pnpm build`（= `node scripts/build-tokens.mjs`）で生成物を更新する
 3. **`pnpm check`（= `node scripts/check-contrast.mjs`）が通ることを確認する**
    — WCAG 2.2 AA（テキスト 4.5:1、非テキスト 3:1）未満のペアがあれば exit 1 になる
-4. 生成物を含めてコミットし、**タグを切る**（消費側はタグを指して固定する）
+4. 生成物を含めてコミットし、`package.json` の `version` を上げて npm に publish する（タグ `vX.Y.Z` も切る）
 
 ### ⚠️ 手編集禁止
 
@@ -274,7 +233,8 @@ font-sans  leading-relaxed  leading-tight
 - 各 `*-text` vs `background`
 - 各 `X-foreground` vs 対応する `X`（`X` が存在するもの。`*-surface-foreground` vs `*-surface`、`primary` / `secondary` / `muted` / `accent` / `card` / `popover` / `destructive` を含む）と、`X-hover` があれば `X-foreground` vs `X-hover`
 - `foreground` / `muted-foreground` vs `background`
-- `primary-foreground` vs 各 `*-solid`（白グリフを載せる前提のため）
+- `primary-foreground` vs 各 `*-solid`（白グリフを載せる前提のため。dark でもグリフは白なので light 値で測る）
+- 各 `*-solid` vs `background`（dark のみ。非テキストの 3:1。ドット等が暗い地から見分けられるか）
 - `icon` / `icon-strong` / `input` vs `background`（非テキストの 3:1）
 
 `icon-subtle` / `icon-fill`（装飾専用）と `line-foreground` vs `line`（LINE のブランド規定）は検証から除外し、
@@ -285,6 +245,61 @@ font-sans  leading-relaxed  leading-tight
 ```bash
 node scripts/check-contrast.mjs "#ffffff" "142 71.8% 29.2%"
 ```
+
+## 生カラーの lint（`design-system-lint`）
+
+[docs/color.md](./docs/color.md) §3・§7 の「生カラー禁止」を機械で止める CLI を同梱している。依存ゼロの Node スクリプト（Node 18 以上）。
+
+```bash
+npx design-system-lint src            # ディレクトリでもファイルでもよい。複数指定できる
+npx design-system-lint src packages/ui/src
+```
+
+消費側の `package.json` に足して CI で回す。
+
+```jsonc
+"scripts": {
+  "lint:colors": "design-system-lint src"
+}
+```
+
+| 終了コード | 意味 |
+|-----------|------|
+| 0 | 違反なし |
+| 1 | 違反あり（`ファイル:行:列  [ルール] 内容` を標準エラーに出す） |
+| 2 | 使い方・設定ファイルの誤り |
+
+**検出するもの**
+
+| ルール | 例 |
+|--------|-----|
+| `palette` | `bg-gray-50` `text-indigo-600` `border-red-300/50` `dark:hover:text-slate-400` `!bg-zinc-950` `bg-white` `text-black/70`、v4 のパレット変数 `var(--color-gray-500)` |
+| `hex` | `#fff` `#1f2937` `bg-[#0070f3]`。数字だけのものは issue 番号と区別するため、`#000` のような同じ数字の 3 桁と 6・8 桁だけを拾う |
+| `color-func` | `rgb(0 0 0)` `rgba(0,0,0,.5)` `hsl(220 13% 91%)` `oklch(0.7 …)` のような値の直書き。`hsl(var(--brand))` のようなトークンの参照と、このパッケージの `hsl("success-text")` は対象外 |
+
+コメントの中と `data:` URI の中は見ない。既定の対象拡張子は `.js` `.jsx` `.mjs` `.cjs` `.ts` `.tsx` `.mts` `.cts` `.css` `.scss` `.vue` `.svelte` `.astro`。
+`node_modules` `.next` `dist` `build` `out` `coverage` `__tests__`、`*.test.*` `*.spec.*` `*.d.ts` は既定で除外する。
+
+**例外の書き方**（理由は必須。理由の無い指定はそれ自体を違反として出す）
+
+| 範囲 | 書き方 |
+|------|--------|
+| その行 | 行末に `// design-system-lint-ignore-line: <理由>`（JSX なら `{/* … */}`、CSS なら `/* … */`） |
+| 次の行 | 直前の行に `design-system-lint-ignore-next-line: <理由>` |
+| ファイル全体 | 先頭 5 行以内に `design-system-lint-ignore-file: <理由>`。color.md §7 の例外（PDF テンプレート、グローバルエラー画面など）に使う |
+
+まとめて外すときは、カレントディレクトリに `design-system-lint.config.json` を置く（`--config <file>` で別の場所も指定できる）。
+
+```jsonc
+{
+  "ignore": ["src/components/pdf/**", "src/app/global-error.tsx"], // 設定ファイルからの相対の glob
+  "allow": ["text-white"],                                         // 許すクラス（variant と不透明度を外した形で照合）
+  "extensions": [".ts", ".tsx", ".css"],                           // 既定の拡張子を置き換える
+  "rules": { "color-func": false }                                 // ルールを止める（既定はすべて有効）
+}
+```
+
+既存の違反が多いプロダクトは、まず `ignore` に今ある違反のファイルを並べて新規だけを止め、直したものから外していく。
 
 ## core と product layer の境界
 
@@ -322,14 +337,17 @@ node scripts/check-contrast.mjs "#ffffff" "142 71.8% 29.2%"
 - `line` / `line-hover` / `line-foreground`（公式色のため light と同じ値）
 - `inactive-surface` / `inactive-surface-foreground`
 - `destructive` / `destructive-foreground`
+- `success-text` / `-surface` / `-surface-foreground` / `-solid`（0.8.0 から）
+- `warning-text` / `-surface` / `-surface-foreground` / `-solid`（0.8.0 から）
+- `info-text` / `-surface` / `-surface-foreground` / `-solid`（0.8.0 から）
+
+success / warning / info の dark 値は、各トーンの light 値と**同じ色相・彩度のまま明度だけ**変えて作り、
+`pnpm check` で AA を確かめている（導き方は `tokens.json` の `$meta.rules` と各グループの `$dark`、比は `contrastDark`）。
 
 **次のトークンには dark 値が無い**（`tokens.json` で `dark: null`、`tokens.css` の `.dark` に出力されない）。
 
 - `icon` / `icon-subtle` / `icon-strong` / `icon-fill`
 - `interactive-text` / `-surface` / `-surface-foreground` / `-solid` / `-visited`
-- `success-text` / `-surface` / `-surface-foreground` / `-solid`
-- `warning-text` / `-surface` / `-surface-foreground` / `-solid`
-- `info-text` / `-surface` / `-surface-foreground` / `-solid`
 - `favorite-text` / `-surface` / `-surface-foreground` / `-solid`
 - `destructive-text` / `destructive-surface` / `destructive-surface-foreground`
 
