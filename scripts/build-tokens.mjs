@@ -11,8 +11,8 @@
  *   - tailwind/preset.js  Tailwind v3 preset（CSS 変数を参照するだけの薄いアダプタ + typography）
  *   - tailwind/v4.css     Tailwind v4 @theme inline（同上）+ typography 用の @theme + cursor の @layer base
  *
- * git dependency で直接インストールされる前提のため、生成物はリポジトリにコミットする
- * （インストール時にビルドが走らなくても動くようにする）。
+ * 生成物はリポジトリにコミットし、npm パッケージにもそのまま同梱する
+ * （インストール時にビルドが走らなくても動くようにする。prepare / prepublish に依存しない）。
  */
 
 import { writeFileSync } from "node:fs";
@@ -63,7 +63,7 @@ function buildCss(entries, json) {
 }
 
 /**
- * JS の実体（ESM）。git dependency で配布するため、消費側でのトランスパイルを前提にできない。
+ * JS の実体（ESM）。消費側でのトランスパイルを前提にしない。
  * TypeScript のまま配ると Next.js が node_modules を変換しないので落ちる。値は .mjs、型は .d.ts に分ける。
  */
 function buildIndexMjs(entries, json) {

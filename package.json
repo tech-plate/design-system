@@ -1,7 +1,7 @@
 {
   "name": "@tech-plate/design-system",
-  "version": "0.7.0",
-  "description": "全社共通のデザイントークン（CSS 変数）とデザインルール。Tailwind v3 / v4 の両方から参照できる薄いアダプタ付き。",
+  "version": "0.8.0",
+  "description": "全社共通のデザイントークン（CSS 変数）とデザインルール。Tailwind v3 / v4 の両方から参照できる薄いアダプタと、生カラーを止める lint 付き。",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -16,15 +16,20 @@
     "./tailwind-v4.css": "./tailwind/v4.css",
     "./preset": "./tailwind/preset.js"
   },
+  "bin": {
+    "design-system-lint": "./scripts/lint-raw-colors.mjs"
+  },
   "files": [
     "tokens",
     "tailwind",
     "docs",
+    "scripts/lint-raw-colors.mjs",
     "README.md"
   ],
   "scripts": {
     "build": "node scripts/build-tokens.mjs",
-    "check": "node scripts/check-contrast.mjs"
+    "check": "node scripts/check-contrast.mjs",
+    "lint": "node scripts/lint-raw-colors.mjs"
   },
   "dependencies": {},
   "devDependencies": {},
