@@ -30,5 +30,8 @@
   "devDependencies": {},
   "sideEffects": [
     "*.css"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
