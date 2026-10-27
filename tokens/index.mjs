@@ -32,18 +32,18 @@ export const tokens = {
   "interactive-surface-foreground": { light: "226 70.7% 40.2%", dark: null }, /* interactive-surface の上に載せる前景色 */
   "interactive-solid": { light: "221 83.2% 53.3%", dark: null }, /* アイコン塗り・ドット等の小面積オブジェクト（白グリフを載せる前提） */
   "interactive-visited": { light: "272.1 71.7% 47.1%", dark: null }, /* 記事・お知らせなど読み物の中の訪問済みリンク（visited:text-interactive-visited）。アプリ画面の一覧リンクには付けない */
-  "success-text": { light: "142 71.8% 29.2%", dark: null }, /* background に載せる前景色 */
-  "success-surface": { light: "141 84.5% 92.5%", dark: null }, /* 薄い面。必ず surface-foreground とセットで使う */
-  "success-surface-foreground": { light: "143 64.2% 24.1%", dark: null }, /* success-surface の上に載せる前景色 */
-  "success-solid": { light: "142 71.8% 29.2%", dark: null }, /* アイコン塗り・ドット等（白グリフを載せるため -700 相当まで暗くしてある） */
-  "warning-text": { light: "26 90.5% 37.1%", dark: null }, /* background に載せる前景色 */
-  "warning-surface": { light: "48 96.5% 88.8%", dark: null }, /* 薄い面。必ず surface-foreground とセットで使う */
-  "warning-surface-foreground": { light: "23 82.5% 31.4%", dark: null }, /* warning-surface の上に載せる前景色 */
-  "warning-solid": { light: "26 90.5% 37.1%", dark: null }, /* アイコン塗り・ドット等（白グリフを載せる前提） */
-  "info-text": { light: "194 69.6% 27.1%", dark: null }, /* background に載せる前景色 */
-  "info-surface": { light: "185 95.9% 90.4%", dark: null }, /* 薄い面。必ず surface-foreground とセットで使う */
-  "info-surface-foreground": { light: "196 63.6% 20.4%", dark: null }, /* info-surface の上に載せる前景色 */
-  "info-solid": { light: "194 69.6% 27.1%", dark: null }, /* アイコン塗り・ドット等の小面積オブジェクト（白グリフを載せる前提） */
+  "success-text": { light: "142 71.8% 29.2%", dark: "142 71.8% 55%" }, /* background に載せる前景色 */
+  "success-surface": { light: "141 84.5% 92.5%", dark: "141 84.5% 14%" }, /* 薄い面。必ず surface-foreground とセットで使う */
+  "success-surface-foreground": { light: "143 64.2% 24.1%", dark: "143 64.2% 75%" }, /* success-surface の上に載せる前景色 */
+  "success-solid": { light: "142 71.8% 29.2%", dark: "142 71.8% 29.2%" }, /* アイコン塗り・ドット等（白グリフを載せるため -700 相当まで暗くしてある） */
+  "warning-text": { light: "26 90.5% 37.1%", dark: "26 90.5% 55%" }, /* background に載せる前景色 */
+  "warning-surface": { light: "48 96.5% 88.8%", dark: "48 96.5% 14%" }, /* 薄い面。必ず surface-foreground とセットで使う */
+  "warning-surface-foreground": { light: "23 82.5% 31.4%", dark: "23 82.5% 75%" }, /* warning-surface の上に載せる前景色 */
+  "warning-solid": { light: "26 90.5% 37.1%", dark: "26 90.5% 37.1%" }, /* アイコン塗り・ドット等（白グリフを載せる前提） */
+  "info-text": { light: "194 69.6% 27.1%", dark: "194 69.6% 55%" }, /* background に載せる前景色 */
+  "info-surface": { light: "185 95.9% 90.4%", dark: "185 95.9% 14%" }, /* 薄い面。必ず surface-foreground とセットで使う */
+  "info-surface-foreground": { light: "196 63.6% 20.4%", dark: "196 63.6% 75%" }, /* info-surface の上に載せる前景色 */
+  "info-solid": { light: "194 69.6% 27.1%", dark: "194 69.6% 33%" }, /* アイコン塗り・ドット等の小面積オブジェクト（白グリフを載せる前提） */
   "inactive-surface": { light: "220 13% 91%", dark: "215 27.9% 16.9%" }, /* 無効行・無効バッジの面 */
   "inactive-surface-foreground": { light: "215 13.8% 34.1%", dark: "217.9 10.6% 64.9%" }, /* inactive-surface の上に載せる前景色 */
   "favorite-text": { light: "333.3 71.4% 47%", dark: null }, /* background に載せる前景色（ハートアイコン・「興味あり」の文言） */
@@ -81,18 +81,6 @@ export const darkUnsupported = [
   "interactive-surface-foreground",
   "interactive-solid",
   "interactive-visited",
-  "success-text",
-  "success-surface",
-  "success-surface-foreground",
-  "success-solid",
-  "warning-text",
-  "warning-surface",
-  "warning-surface-foreground",
-  "warning-solid",
-  "info-text",
-  "info-surface",
-  "info-surface-foreground",
-  "info-solid",
   "favorite-text",
   "favorite-surface",
   "favorite-surface-foreground",

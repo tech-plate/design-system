@@ -13,10 +13,11 @@
  *   - 各 *-text / *-visited vs background
  *   - 各 X-foreground vs X（X が存在するもの。*-surface-foreground vs *-surface を含む）、
  *     X-hover が存在すれば X-foreground vs X-hover も（line-foreground は exempt により除外。下記）
- *   - 各 *-solid vs 白グリフ（primary-foreground の light 値 98%。light のみ）
+ *   - 各 *-solid vs 白グリフ（primary-foreground の light 値 98%。dark でもグリフは白なので light 値で測る）
  *   - foreground / muted-foreground vs background
  * 検証するペア（非テキスト 3:1）:
  *   - nonText: true のトークン vs background（アイコン・入力欄の枠）
+ *   - 各 *-solid vs background（dark のみ。ドット等が暗い地から見分けられるか。light は白グリフの検証で包含される）
  * light / dark の両テーマを検証し、dark 値が null のトークンはスキップする。
  *
  * 除外（EXEMPT 行。PASS/FAIL の集計に含めない）は黙ってスキップせず、理由を出力する:
@@ -100,8 +101,13 @@ function buildPairs() {
       for (const bg of [base, `${base}-hover`]) if (TOKENS.has(bg)) add(name, bg);
     }
     // solid は白グリフを載せる前提。core の白グリフ（primary-foreground の light 値 98%）で測る。
-    // dark の primary-foreground は暗色なので light のみ
-    if (name.endsWith("-solid")) add("primary-foreground", name, { themes: ["light"] });
+    // dark の primary-foreground は暗色だが solid に載せるグリフは白のままなので、dark でも light 値で測る。
+    // dark では加えて、小面積オブジェクトとして暗い background から見分けられるか（非テキスト 3:1）を測る
+    // （light は background が白グリフより明るいので、白グリフの 4.5:1 で包含される）
+    if (name.endsWith("-solid")) {
+      add("primary-foreground", name, { fgTheme: "light" });
+      add(name, "background", { min: NON_TEXT, themes: ["dark"] });
+    }
     if (def.nonText) add(name, "background", { min: NON_TEXT });
   }
   add("foreground", "background");
@@ -129,14 +135,21 @@ function buildSurfaceInfoPairs() {
   return pairs;
 }
 
+function noteOf({ reason, min, fgTheme, theme }) {
+  if (reason) return `除外: ${reason}`;
+  if (min === NON_TEXT) return `非テキスト ${NON_TEXT}:1`;
+  if (fgTheme && fgTheme !== theme) return `前景は ${fgTheme} 値（白グリフ）`;
+  return "";
+}
+
 function run() {
   const rows = [];
   let skipped = 0;
 
   for (const theme of ["light", "dark"]) {
-    for (const { fg, bg, min, themes } of buildPairs()) {
+    for (const { fg, bg, min, themes, fgTheme } of buildPairs()) {
       if (themes && !themes.includes(theme)) continue;
-      const fgValue = TOKENS.get(fg)?.[theme];
+      const fgValue = TOKENS.get(fg)?.[fgTheme ?? theme];
       const bgValue = TOKENS.get(bg)?.[theme];
       if (!fgValue || !bgValue) {
         skipped++;
@@ -150,7 +163,7 @@ function run() {
         colors: `${toHex(toRgb(fgValue))} / ${toHex(toRgb(bgValue))}`,
         ratio: ratio.toFixed(2),
         result: reason ? "EXEMPT" : ratio >= min ? "PASS" : "FAIL",
-        note: reason ? `除外: ${reason}` : min === NON_TEXT ? `非テキスト ${NON_TEXT}:1` : "",
+        note: noteOf({ reason, min, fgTheme, theme }),
       });
     }
   }

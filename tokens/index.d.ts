@@ -42,18 +42,18 @@ export declare const tokens: {
   readonly "interactive-surface-foreground": { readonly light: "226 70.7% 40.2%"; readonly dark: null }; /* interactive-surface の上に載せる前景色 */
   readonly "interactive-solid": { readonly light: "221 83.2% 53.3%"; readonly dark: null }; /* アイコン塗り・ドット等の小面積オブジェクト（白グリフを載せる前提） */
   readonly "interactive-visited": { readonly light: "272.1 71.7% 47.1%"; readonly dark: null }; /* 記事・お知らせなど読み物の中の訪問済みリンク（visited:text-interactive-visited）。アプリ画面の一覧リンクには付けない */
-  readonly "success-text": { readonly light: "142 71.8% 29.2%"; readonly dark: null }; /* background に載せる前景色 */
-  readonly "success-surface": { readonly light: "141 84.5% 92.5%"; readonly dark: null }; /* 薄い面。必ず surface-foreground とセットで使う */
-  readonly "success-surface-foreground": { readonly light: "143 64.2% 24.1%"; readonly dark: null }; /* success-surface の上に載せる前景色 */
-  readonly "success-solid": { readonly light: "142 71.8% 29.2%"; readonly dark: null }; /* アイコン塗り・ドット等（白グリフを載せるため -700 相当まで暗くしてある） */
-  readonly "warning-text": { readonly light: "26 90.5% 37.1%"; readonly dark: null }; /* background に載せる前景色 */
-  readonly "warning-surface": { readonly light: "48 96.5% 88.8%"; readonly dark: null }; /* 薄い面。必ず surface-foreground とセットで使う */
-  readonly "warning-surface-foreground": { readonly light: "23 82.5% 31.4%"; readonly dark: null }; /* warning-surface の上に載せる前景色 */
-  readonly "warning-solid": { readonly light: "26 90.5% 37.1%"; readonly dark: null }; /* アイコン塗り・ドット等（白グリフを載せる前提） */
-  readonly "info-text": { readonly light: "194 69.6% 27.1%"; readonly dark: null }; /* background に載せる前景色 */
-  readonly "info-surface": { readonly light: "185 95.9% 90.4%"; readonly dark: null }; /* 薄い面。必ず surface-foreground とセットで使う */
-  readonly "info-surface-foreground": { readonly light: "196 63.6% 20.4%"; readonly dark: null }; /* info-surface の上に載せる前景色 */
-  readonly "info-solid": { readonly light: "194 69.6% 27.1%"; readonly dark: null }; /* アイコン塗り・ドット等の小面積オブジェクト（白グリフを載せる前提） */
+  readonly "success-text": { readonly light: "142 71.8% 29.2%"; readonly dark: "142 71.8% 55%" }; /* background に載せる前景色 */
+  readonly "success-surface": { readonly light: "141 84.5% 92.5%"; readonly dark: "141 84.5% 14%" }; /* 薄い面。必ず surface-foreground とセットで使う */
+  readonly "success-surface-foreground": { readonly light: "143 64.2% 24.1%"; readonly dark: "143 64.2% 75%" }; /* success-surface の上に載せる前景色 */
+  readonly "success-solid": { readonly light: "142 71.8% 29.2%"; readonly dark: "142 71.8% 29.2%" }; /* アイコン塗り・ドット等（白グリフを載せるため -700 相当まで暗くしてある） */
+  readonly "warning-text": { readonly light: "26 90.5% 37.1%"; readonly dark: "26 90.5% 55%" }; /* background に載せる前景色 */
+  readonly "warning-surface": { readonly light: "48 96.5% 88.8%"; readonly dark: "48 96.5% 14%" }; /* 薄い面。必ず surface-foreground とセットで使う */
+  readonly "warning-surface-foreground": { readonly light: "23 82.5% 31.4%"; readonly dark: "23 82.5% 75%" }; /* warning-surface の上に載せる前景色 */
+  readonly "warning-solid": { readonly light: "26 90.5% 37.1%"; readonly dark: "26 90.5% 37.1%" }; /* アイコン塗り・ドット等（白グリフを載せる前提） */
+  readonly "info-text": { readonly light: "194 69.6% 27.1%"; readonly dark: "194 69.6% 55%" }; /* background に載せる前景色 */
+  readonly "info-surface": { readonly light: "185 95.9% 90.4%"; readonly dark: "185 95.9% 14%" }; /* 薄い面。必ず surface-foreground とセットで使う */
+  readonly "info-surface-foreground": { readonly light: "196 63.6% 20.4%"; readonly dark: "196 63.6% 75%" }; /* info-surface の上に載せる前景色 */
+  readonly "info-solid": { readonly light: "194 69.6% 27.1%"; readonly dark: "194 69.6% 33%" }; /* アイコン塗り・ドット等の小面積オブジェクト（白グリフを載せる前提） */
   readonly "inactive-surface": { readonly light: "220 13% 91%"; readonly dark: "215 27.9% 16.9%" }; /* 無効行・無効バッジの面 */
   readonly "inactive-surface-foreground": { readonly light: "215 13.8% 34.1%"; readonly dark: "217.9 10.6% 64.9%" }; /* inactive-surface の上に載せる前景色 */
   readonly "favorite-text": { readonly light: "333.3 71.4% 47%"; readonly dark: null }; /* background に載せる前景色（ハートアイコン・「興味あり」の文言） */
