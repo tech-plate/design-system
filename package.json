@@ -17,7 +17,7 @@
     "./preset": "./tailwind/preset.js"
   },
   "bin": {
-    "design-system-lint": "./scripts/lint-raw-colors.mjs"
+    "design-system-lint": "scripts/lint-raw-colors.mjs"
   },
   "files": [
     "tokens",
