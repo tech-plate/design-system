@@ -24,7 +24,7 @@
 2. [layout.md](./layout.md) で骨格（ブレークポイント・地色・z-index・タッチターゲット）を決める
 3. [color.md](./color.md) → [typography.md](./typography.md) → [spacing.md](./spacing.md) で値の選び方を押さえる
 4. 部品を作る・使うときに [components.md](./components.md)、フォームは [forms.md](./forms.md)、
-   メニューは [navigation.md](./navigation.md)
+   メニューは [navigation.md](./navigation.md)、業務アプリのマニュアルは [manual.md](./manual.md)
 5. 文言を書くときに [writing.md](./writing.md)
 6. 目指すアクセシビリティの水準と、部品をまたぐルール（キーボード・読み上げ・拡大）は [a11y.md](./a11y.md)
 
@@ -39,6 +39,7 @@
 | [components.md](./components.md) | 部品ごとの仕様とルール、フォーカス表示、影、アイコン、レビュー用チェックリスト |
 | [forms.md](./forms.md) | 1 項目の構造、必須の示し方、エラー表示、検証タイミング、送信、入力部品の選択（候補が多い選択の Combobox） |
 | [navigation.md](./navigation.md) | メニューをオブジェクトで組む原則、権限とスコープ、to B のヘッダー（パンくず・ページ名・ユーザーメニュー）、スマホ向けナビ |
+| [manual.md](./manual.md) | 業務アプリのマニュアルの置き場・構成（トップ + 1 画面 1 ページ）・ページの形・画像・目次と前後のページ・権限・検証 |
 | [writing.md](./writing.md) | ラベル・説明文・エラー・ボタンの書き方、文体と表記の統一 |
 | [a11y.md](./a11y.md) | 目標水準（JIS X 8341-3 AA 相当・WCAG 2.2 AA）、各 docs の a11y ルールの索引、ページの骨格・見出し・キーボード・通知・拡大などの横断ルール、確認方法 |
 
