@@ -180,6 +180,16 @@ Button の `secondary` / `outline` / `ghost`、FilterChip（非選択）、ア�
 - **主要アクションの塗りは `primary` のみ。** 色つきベタ塗りボタン（緑の成功ボタン等）は作らない
   （[color.md](./color.md) の「solid はベタ塗りボタンではない」）。
 - 破壊的アクションだけが `destructive` の塗りを使ってよい。LINE に関わる操作は `line` の塗り（§2-2）。
+  - 破壊的操作の**入口**（確認ダイアログを開くだけのボタン）は `outline` にする。`destructive` の塗りは実行のボタンに使う。
+  - **例外: 元に戻せない一連の処理の入口。** アカウントの削除のように、結果が元に戻せず影響の大きい処理を
+    「内容の確認 → 実行」の順に進める画面では、入口のボタンから `destructive` を使ってよい。
+    入口が補助的な操作（`outline`）に見えると処理の重さが伝わらず、近くにある軽い操作（利用の停止など）と取り違えるため。
+    次のすべてを満たすときだけ使う。
+    - 行の削除・予約の取り消しのような日常の操作ではない（それらの入口は `outline` のまま）。
+    - 文言から、押した時点では実行されないことが分かる（「〜の処理を進める」など。入口に「削除する」と書かない）。
+      ボタンの近くにも、実行するまで何も変わらないことを 1 文で書く。
+    - 実行のボタンは別にあり、確認（§7）を挟む。
+    - 入口と実行の `destructive` を同時に見せない（入口を押したら入口を隠し、実行のボタンに入れ替える）。
 - 1 つの画面・1 つのダイアログに主要アクション（塗りボタン）は 1 つ。残りは secondary / outline / ghost。
   - `line` も塗りなのでこのルールと重なる。LINE ボタンを置く画面では、`primary` との優先順位をプロダクト側で決める。
 - 遷移するだけのボタンは `<a>`（リンク）として描画し、見た目は Button と同じにする。
@@ -192,9 +202,9 @@ Button の `secondary` / `outline` / `ghost`、FilterChip（非選択）、ア�
 |---------|---------|--------|-------|
 | `primary`（既定） | 画面・ダイアログの主要アクション。1 つだけ | `border-0 bg-primary text-primary-foreground` | `hover:bg-primary/90` |
 | `secondary` | 主要アクションではないが、その画面で前に進むための操作（空状態の次の行動、エラーからの再読み込み、「編集」など、画面や単位ごとの主な操作） | `border border-foreground bg-transparent text-foreground` | `hover:bg-foreground/5` |
-| `outline` | キャンセル・戻る・補助的な操作。破壊的操作の入口（確認ダイアログを開くだけの「削除」「取り消す」ボタン） | `border border-input bg-transparent text-foreground` | `hover:bg-foreground/5` |
+| `outline` | キャンセル・戻る・補助的な操作。破壊的操作の入口（確認ダイアログを開くだけの「削除」「取り消す」ボタン。例外は §2-1） | `border border-input bg-transparent text-foreground` | `hover:bg-foreground/5` |
 | `ghost` | 面の上で目立たせたくない操作 | `border-0 bg-transparent text-foreground` | `hover:bg-foreground/5` |
-| `destructive` | 削除・取り消しなど元に戻せない操作 | `border-0 bg-destructive text-destructive-foreground` | `hover:bg-destructive/90` |
+| `destructive` | 削除・取り消しなど元に戻せない操作。元に戻せない一連の処理の入口（§2-1 の例外） | `border-0 bg-destructive text-destructive-foreground` | `hover:bg-destructive/90` |
 | `line` | LINE に関わる操作（LINE ログイン・友だち追加など）。どの場面で使うかはプロダクトごとに決める | `border-0 bg-line text-line-foreground` | `hover:bg-line-hover` |
 
 > `secondary` / `outline` / `ghost` の地は**透明**（`bg-transparent`）。`bg-card`（白）にすると、グレー地（`bg-muted`）の上で白い箱が浮く。
@@ -919,6 +929,7 @@ EmptyState と対になる部品。体裁を揃える。
 - [ ] `size="sm"`（32px）のボタンを、to B の密な一覧の行アクション以外で使っていないか
 - [ ] ボタン行が §2-3 に従っているか（`md` 未満は全幅・1 行 2 つまで、ダイアログは均等幅 2 列。§7-3 の `md` 未満を除く）
 - [ ] ボタン行でないボタン（見出し横・行アクション・ヘッダー・EmptyState / ErrorState）を全幅にしていないか
+- [ ] 破壊的操作の入口を `destructive` にしている箇所は、§2-1 の例外の条件を全て満たしているか（それ以外の入口は `outline`）
 - [ ] `window.confirm()` を使っていないか
 - [ ] 確認ダイアログが ESC・背景クリックで閉じないか
 - [ ] 破壊的な確認ダイアログは 実行（左）／キャンセル（右）で、初期フォーカスがキャンセルか
