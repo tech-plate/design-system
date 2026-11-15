@@ -208,7 +208,7 @@ Button の `secondary` / `outline` / `ghost`、FilterChip（非選択）、ア�
 | size | 高さ | 左右 padding | 文字 | 使う場面 |
 |------|------|-------------|------|---------|
 | `md`（既定） | `min-h-11`（44px） | `px-6` | `text-base` | すべての場面 |
-| `sm` | `h-8`（32px） | `px-4` | `text-sm` | **to B の密な一覧の行アクションだけ**（[layout.md](./layout.md) のタッチターゲットの例外） |
+| `sm` | `h-8`（32px） | `px-4` | `text-sm` | **to B の密な一覧の行アクションと、表の上の行の「この画面の見方」（§7-5）だけ**（[layout.md](./layout.md) のタッチターゲットの例外） |
 
 角丸はどちらも `rounded-md`。
 
@@ -554,8 +554,8 @@ Button の `secondary` / `outline` / `ghost`、FilterChip（非選択）、ア�
 
 | 要素 | クラス・規定 |
 |------|------------|
-| ボタン | Button の `outline`（グレー地に置くときは `secondary`。§2-2）、`md`。共通の `gap-2` を **`gap-1`（4px）に置き換える** |
-| アイコン | 丸付きの「?」（lucide の `CircleHelp`）20px（`size-5`）、`aria-hidden="true"`。文字の左 |
+| ボタン | Button の `outline`（グレー地に置くときは `secondary`。§2-2）、`md`。共通の `gap-2` を **`gap-1`（4px）に置き換える**。to B の密な一覧で、表の上の行（件数・注意文と同じ行）に置くときは `sm` でもよい（その行を高くしないため。§2-2 の `sm` の使い道に含める）。1 つのプロダクトの中で大きさをそろえる |
+| アイコン | 丸付きの「?」（lucide の `CircleHelp`）20px（`size-5`）。`sm` のときは 16px（`size-4`）。`aria-hidden="true"`。文字の左 |
 | 文字 | 「この画面の見方」。アイコンだけにしない |
 | 置き場所 | 説明が関わる内容のすぐ上の行の右端（表なら、件数などを並べた表の上の行の右端）。1 つのプロダクトの中で置き場所をそろえる（[a11y.md](./a11y.md) §1 の 3.2.6） |
 | 数 | **1 画面に 1 つ** |
@@ -725,7 +725,7 @@ EmptyState と対になる部品。体裁を揃える。
 
 | 状態 | チップのクラス | チェック欄のクラス |
 |------|---------------|-------------------|
-| 選択中 | `border-foreground bg-muted font-semibold text-foreground hover:bg-foreground/10` | `flex size-4 shrink-0 items-center justify-center rounded-sm border border-foreground bg-foreground text-background`。中に Check 16px（`size-4`、`aria-hidden="true"`） |
+| 選択中 | `border-foreground bg-muted font-semibold text-foreground hover:bg-foreground/10` | `flex size-4 shrink-0 items-center justify-center rounded-sm border border-foreground bg-foreground text-background`。中に Check 12px（`size-3`、`aria-hidden="true"`。チェック欄と同じ 16px だと欄いっぱいになる） |
 | 非選択 | `border-input font-medium text-foreground hover:bg-foreground/5` | `flex size-4 shrink-0 items-center justify-center rounded-sm border border-input`（中は空） |
 | focus-visible | §1-1 のボタン類のリング（`ring-offset-2` あり） | — |
 | disabled | `disabled:cursor-not-allowed disabled:opacity-60` | — |
@@ -828,7 +828,7 @@ EmptyState と対になる部品。体裁を揃える。
 | ボタン | `relative inline-flex shrink-0 items-center justify-center rounded-sm text-icon hover:text-icon-strong before:absolute before:-inset-2` + §1-1 のボタン類のリング |
 | アイコン | Copy。隣の文字に合わせて 16px（`size-4`。表）か 20px（`size-5`。DescriptionList）。`aria-hidden="true"`。**常に出す**（hover したときだけ出さない） |
 | 名前 | `aria-label="〈項目名〉をコピー"`（「電話番号をコピー」）。「コピー」の文字は画面に出さない |
-| 押したら | 値をクリップボードに入れ、トースト（§9）で「コピーしました」 |
+| 押したら | 値をクリップボードに入れ、トースト（§9）で「コピーしました」。トーストに加えて、押したボタンのアイコンを短い時間だけ Check に変えてもよい（形が変わるので、色だけに頼らない合図になる） |
 | 当たり判定 | 疑似要素で上下左右に 8px 広げる（表 32px。[layout.md](./layout.md) §5 の to B の密な一覧の例外）。DescriptionList では `before:-inset-3`（44px）にし、値との間を `gap-3` にする（当たり判定を値の文字に重ねない） |
 
 - **押して詳細を開く行は、行 hover の色・`cursor-pointer`・行末の「›」で伝える。**「行をクリックすると詳細を開きます」の文は書かない。
@@ -861,7 +861,7 @@ EmptyState と対になる部品。体裁を揃える。
   どちらか一方）。具体的な示し方は [forms.md](./forms.md)。
 - **保存の仕組みを文で補わない。** 保存の状態（保存中 / 保存済み 時刻 / 失敗）を画面に出し、保存ボタンは保存される入力と同じカードに置く（[forms.md](./forms.md) §7-2）。
 - **最初の値・空欄のときの動きを文で説明しない。** 最初の値を入力欄に入れておくか、「すべて」を選べる形（§10-3）にする。
-  画面が自動で値を変えたときは、変えた欄のすぐ下にふつうの文字で知らせる（[forms.md](./forms.md) §7-3、[writing.md](./writing.md) §2-5）。
+  画面が自動で値を変えたときは、利用者が今操作した所のすぐ近く（または変えた欄のすぐ下）にふつうの文字で知らせる（[forms.md](./forms.md) §7-3、[writing.md](./writing.md) §2-5）。
 
 ---
 
