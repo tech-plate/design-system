@@ -36,11 +36,11 @@
 npm レジストリ（public）から入れる。**`^0.x` で範囲を指定し、上げるときは差分（トークン値・docs）を読んでから上げる。**
 
 ```bash
-pnpm add @tech-plate/design-system@^0.10.0
+pnpm add @tech-plate/design-system@^0.11.0
 ```
 
-0.x の間は、`^0.10.0` は 0.10.x だけを受け入れる（0.11.0 には自動で上がらない）。
-トークンの値や docs のルールが変わるのはマイナー（0.10 → 0.11）なので、上げるときに消費側で見た目とコントラストを確かめる。
+0.x の間は、`^0.11.0` は 0.11.x だけを受け入れる（0.12.0 には自動で上がらない）。
+トークンの値や docs のルールが変わるのはマイナー（0.11 → 0.12）なので、上げるときに消費側で見た目とコントラストを確かめる。
 
 生成物（`tokens/tokens.css` `tokens/index.mjs` `tokens/index.d.ts` `tailwind/preset.js` `tailwind/v4.css`、React の部品の `react/dist`）は
 **パッケージに同梱済み**なので、インストール時にビルドは走らない。ランタイム依存はゼロ（React の部品を使うときだけ、peerDependencies の `react` / `react-dom` 19 以上が要る）。
