@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { Combobox, type ComboboxProps } from "./combobox.js";
+import { Combobox, ComboboxPortalContainer, type ComboboxProps } from "./combobox.js";
 import type { ComboboxOption } from "./normalize.js";
 
 const OPTIONS: ComboboxOption[] = [
@@ -96,11 +96,52 @@ describe("Combobox: 入力欄と読み上げ", () => {
 });
 
 describe("Combobox: 開く", () => {
-  it("フォーカスしたら開き、未入力なら全候補を出す", async () => {
+  it("押したら開き、未入力なら全候補を出す", async () => {
     const user = userEvent.setup();
     render(<Harness />);
     await user.click(input());
     expect(optionLabels()).toEqual(OPTIONS.map((o) => o.label));
+  });
+
+  it("フォーカスしただけ（スクリプト・Tab）では開かない", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    act(() => input().focus());
+    expect(screen.queryByRole("listbox")).toBeNull();
+    expect(input().getAttribute("aria-expanded")).toBe("false");
+    act(() => input().blur());
+    await user.tab();
+    expect(document.activeElement).toBe(input());
+    expect(screen.queryByRole("listbox")).toBeNull();
+  });
+
+  it("フォーカスした後、打つか ↓ で開く", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    act(() => input().focus());
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("listbox")).toBeTruthy();
+    await user.keyboard("{Escape}");
+    await user.keyboard("佐");
+    expect(optionLabels()).toEqual(["佐藤 花子"]);
+  });
+
+  it("閉じている間は候補を照合用にそろえない", async () => {
+    let reads = 0;
+    const counted = OPTIONS.map((o) => ({
+      ...o,
+      get reading() {
+        reads++;
+        return o.reading;
+      },
+    }));
+    const user = userEvent.setup();
+    const { rerender } = render(<Harness options={counted} initial="1" />);
+    rerender(<Harness options={counted} initial="1" />);
+    act(() => input().focus());
+    expect(reads).toBe(0);
+    await user.click(input());
+    expect(reads).toBeGreaterThan(0);
   });
 
   it("閉じた後に入力欄（chevron の上）を押すと開く", async () => {
@@ -587,6 +628,40 @@ describe("Combobox: サーバで検索する", () => {
   });
 });
 
+describe("Combobox: ComboboxPortalContainer", () => {
+  function InModal() {
+    const [box, setBox] = useState<HTMLDivElement | null>(null);
+    return (
+      <div role="dialog" ref={setBox} data-testid="modal">
+        <ComboboxPortalContainer container={box}>
+          <Harness />
+        </ComboboxPortalContainer>
+      </div>
+    );
+  }
+
+  it("渡した要素の中に一覧を出す（モーダルの箱の外に出さない）", async () => {
+    const user = userEvent.setup();
+    render(<InModal />);
+    await user.click(screen.getByRole("combobox"));
+    const box = listbox().closest(".fixed") as HTMLElement;
+    expect(box.parentElement).toBe(screen.getByTestId("modal"));
+    await user.click(screen.getByRole("option", { name: "佐藤 花子" }));
+    expect(currentValue()).toBe("2");
+  });
+
+  it("null なら document.body に出す", async () => {
+    const user = userEvent.setup();
+    render(
+      <ComboboxPortalContainer container={null}>
+        <Harness />
+      </ComboboxPortalContainer>,
+    );
+    await user.click(input());
+    expect((listbox().closest(".fixed") as HTMLElement).parentElement).toBe(document.body);
+  });
+});
+
 describe("Combobox: スマホ（md 未満）は全画面のシートで開く", () => {
   // vitest.setup.mjs の matchMedia は同じ query に同じオブジェクトを返す
   const md = () => window.matchMedia("(min-width: 48rem)") as { matches: boolean };
@@ -610,6 +685,29 @@ describe("Combobox: スマホ（md 未満）は全画面のシートで開く", 
     expect(search.className).toContain("text-base");
     expect(within(dialog).getAllByRole("option")).toHaveLength(OPTIONS.length);
     expect(document.body.style.overflow).toBe("hidden");
+  });
+
+  it("フォーカスしただけではシートを開かない", () => {
+    render(<Harness />);
+    act(() => input().focus());
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("ComboboxPortalContainer の中ではシートもその中に出す", async () => {
+    function InModal() {
+      const [box, setBox] = useState<HTMLDivElement | null>(null);
+      return (
+        <div ref={setBox} data-testid="modal">
+          <ComboboxPortalContainer container={box}>
+            <Harness />
+          </ComboboxPortalContainer>
+        </div>
+      );
+    }
+    const user = userEvent.setup();
+    render(<InModal />);
+    await user.click(input());
+    expect(screen.getByRole("dialog").parentElement).toBe(screen.getByTestId("modal"));
   });
 
   it("シートの中で絞って選ぶと閉じ、元の入力欄にフォーカスを戻す", async () => {

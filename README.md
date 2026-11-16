@@ -203,6 +203,28 @@ const found = staff.filter((s) => matchesOption(s, query)); // 部分一致。�
 // DB で検索するなら、保存する側の列を normalizeForMatch で、入力を normalizeQuery でそろえて比べる
 ```
 
+### モーダルの中で使う
+
+一覧（`md` 以上）とシート（`md` 未満）は既定で `document.body` に portal で出す。
+フォーカスを閉じ込めるモーダル（Radix の Dialog など）は箱の外を「外側」とみなし、そこへの押す・打つ・スクロールを止めるので、
+モーダルの中では `ComboboxPortalContainer` で出す先をモーダルの箱にする。
+
+```tsx
+import { Combobox, ComboboxPortalContainer } from "@tech-plate/design-system/react";
+
+const [box, setBox] = useState<HTMLDivElement | null>(null);
+
+<DialogContent ref={setBox}>
+  <ComboboxPortalContainer container={box}>
+    {/* この中の Combobox はすべて box の中に出る。null の間は document.body */}
+  </ComboboxPortalContainer>
+</DialogContent>
+```
+
+- **渡す要素とその祖先に CSS の `transform` を付けない。** 一覧は `position: fixed` で入力欄の下に置くので、transform のある祖先があるとそこが基準になり、位置がずれる（`translate-x-[-50%]` などで中央に寄せる箱がこれに当たる。flex / grid で中央に寄せる）。
+- **Esc:** 一覧が開いているときの Esc は部品が `stopPropagation` して外へ伝えない（一覧だけを閉じる）。ただし document に capture で Esc を受けるモーダル（Radix の DismissableLayer など）には部品より先に届くので、モーダル側で `event.target` が `[role=combobox][aria-expanded=true]` のときは閉じないようにする（Radix なら `onEscapeKeyDown` で `event.preventDefault()`）。
+
+
 ## JS / TS からトークン値を参照する
 
 クラス名が使えない箇所（canvas 描画、グラフライブラリ等）でのみ使う。

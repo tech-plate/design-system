@@ -1,3 +1,4 @@
+import { type ReactNode } from "react";
 import { type ComboboxOption } from "./normalize.js";
 /** 検索つきの Combobox（1 つだけ選ぶ）。仕様は docs/forms.md §8-3 */
 export type ComboboxProps = {
@@ -35,6 +36,17 @@ export type ComboboxProps = {
      */
     onCreate?: (name: string) => Promise<ComboboxOption>;
 };
+/**
+ * Combobox の一覧（md 以上）とシート（md 未満）を出す先を変える。既定は document.body。
+ * フォーカスを閉じ込めるモーダル（Radix の Dialog など）の中では、その箱を渡す
+ * （箱の外に出すと、モーダルが外側とみなして押す・打つ・スクロールを止める）。
+ * 一覧は position: fixed で置くので、渡す要素とその祖先に transform を付けない。
+ */
+export declare function ComboboxPortalContainer({ container, children, }: {
+    /** 出す先の要素。null なら document.body */
+    container: Element | null;
+    children: ReactNode;
+}): import("react").JSX.Element;
 /**
  * 検索つきの Combobox。文字を打って候補を絞り、1 つを選ぶ（docs/forms.md §8-3）。
  * フォーカスは入力欄に置いたまま、指している候補を aria-activedescendant で示す。
