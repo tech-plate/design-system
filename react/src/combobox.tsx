@@ -1,8 +1,10 @@
 "use client";
 
 import {
+  createContext,
   Fragment,
   memo,
+  useContext,
   useEffect,
   useId,
   useLayoutEffect,
@@ -78,6 +80,7 @@ const cx = (...classes: (string | false | undefined)[]) => classes.filter(Boolea
 /** 照合用にそろえた名前・読みを持たせた候補 */
 type IndexedOption = { option: ComboboxOption; label: string; reading?: string };
 type Entry = { kind: "option"; option: ComboboxOption } | { kind: "create" };
+const EMPTY_INDEXED: IndexedOption[] = [];
 
 const indexOptions = (options: ComboboxOption[]): IndexedOption[] =>
   options.map((option) => ({
@@ -201,6 +204,25 @@ function OptionRow({
   );
 }
 
+const PortalContainerContext = createContext<Element | null>(null);
+
+/**
+ * Combobox の一覧（md 以上）とシート（md 未満）を出す先を変える。既定は document.body。
+ * フォーカスを閉じ込めるモーダル（Radix の Dialog など）の中では、その箱を渡す
+ * （箱の外に出すと、モーダルが外側とみなして押す・打つ・スクロールを止める）。
+ * 一覧は position: fixed で置くので、渡す要素とその祖先に transform を付けない。
+ */
+export function ComboboxPortalContainer({
+  container,
+  children,
+}: {
+  /** 出す先の要素。null なら document.body */
+  container: Element | null;
+  children: ReactNode;
+}) {
+  return <PortalContainerContext.Provider value={container}>{children}</PortalContainerContext.Provider>;
+}
+
 /**
  * 検索つきの Combobox。文字を打って候補を絞り、1 つを選ぶ（docs/forms.md §8-3）。
  * フォーカスは入力欄に置いたまま、指している候補を aria-activedescendant で示す。
@@ -230,12 +252,11 @@ export function Combobox({
   const labelId = `${baseId}label`;
   const optionId = (index: number) => `${baseId}option-${index}`;
   const isDesktop = useIsDesktop();
+  const portalContainer = useContext(PortalContainerContext);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const sheetInputRef = useRef<HTMLInputElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
-  /** フォーカスを入力欄に戻すときに、もう一度開かないようにする */
-  const suppressOpenRef = useRef(false);
   /** 最後に選んだ・作った候補。親が options を更新するまでの間、入力欄に名前を出すため */
   const lastChosenRef = useRef<ComboboxOption | null>(null);
 
@@ -266,16 +287,20 @@ export function Combobox({
   const query = typed ?? "";
   const trimmed = query.trim();
   const normalizedQuery = useMemo(() => normalizeQuery(query), [query]);
-  const indexed = useMemo(() => indexOptions(onSearch ? results : options), [onSearch, results, options]);
-  // サーバで検索するときは結果をそのまま出す。閉じているときは絞らない
+  // 照合用にそろえるのは開いている間だけ（閉じている間の再描画で全候補をそろえ直さない）
+  const indexed = useMemo(
+    () => (open ? indexOptions(onSearch ? results : options) : EMPTY_INDEXED),
+    [open, onSearch, results, options],
+  );
+  // サーバで検索するときは結果をそのまま出す
   const visible = useMemo(
     () =>
-      !open || onSearch || normalizedQuery === ""
+      onSearch || normalizedQuery === ""
         ? indexed
         : indexed.filter(
             ({ label: l, reading }) => l.includes(normalizedQuery) || (reading?.includes(normalizedQuery) ?? false),
           ),
-    [open, onSearch, normalizedQuery, indexed],
+    [onSearch, normalizedQuery, indexed],
   );
   const exactExists = normalizedQuery !== "" && visible.some(({ label: l }) => l === normalizedQuery);
   const showCreate = onCreate !== undefined && trimmed !== "" && !exactExists && !loading;
@@ -331,12 +356,8 @@ export function Combobox({
     cancelSearch();
   };
 
-  /** 元の入力欄にフォーカスを戻す（開き直さない） */
-  const focusInput = () => {
-    suppressOpenRef.current = true;
-    inputRef.current?.focus();
-    suppressOpenRef.current = false;
-  };
+  /** 元の入力欄にフォーカスを戻す（フォーカスだけでは開かない） */
+  const focusInput = () => inputRef.current?.focus();
 
   const choose = (option: ComboboxOption) => {
     lastChosenRef.current = option;
@@ -571,9 +592,8 @@ export function Combobox({
         disabled={disabled}
         value={open && isDesktop ? (typed ?? selectedLabel) : selectedLabel}
         className={cx(INPUT_CLASS, showClear ? "pr-20" : "pr-10")}
-        onFocus={() => {
-          if (!suppressOpenRef.current) openList();
-        }}
+        // フォーカスだけでは開かない（モーダルが最初の項目にフォーカスしたときに一覧を出さない）。
+        // 押したとき（chevron は pointer-events-none なので入力欄が受ける）・打ったとき・↓↑ で開く
         onClick={openList}
         onBlur={() => {
           if (open && isDesktop) closeList();
@@ -613,7 +633,7 @@ export function Combobox({
             </span>
             {listContent(labelId)}
           </div>,
-          document.body,
+          portalContainer ?? document.body,
         )}
 
       {sheetOpen &&
@@ -642,7 +662,7 @@ export function Combobox({
               {listContent(titleId)}
             </div>
           </Sheet>,
-          document.body,
+          portalContainer ?? document.body,
         )}
     </div>
   );

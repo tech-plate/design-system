@@ -1,6 +1,6 @@
 "use client";
 import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { Fragment, memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, } from "react";
+import { createContext, Fragment, memo, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, } from "react";
 import { createPortal } from "react-dom";
 import { matchRangeNormalized, normalizeForMatch, normalizeQuery } from "./normalize.js";
 const SEARCH_DEBOUNCE_MS = 300;
@@ -16,6 +16,7 @@ const ERROR_NOTE_CLASS = "flex min-h-11 items-center px-3 py-2 text-sm text-dest
 const SEARCH_FAILED_MESSAGE = "候補を読み込めませんでした。時間をおいてもう一度入力してください";
 const CREATE_FAILED_MESSAGE = "追加できませんでした。時間をおいてもう一度押してください";
 const cx = (...classes) => classes.filter(Boolean).join(" ");
+const EMPTY_INDEXED = [];
 const indexOptions = (options) => options.map((option) => ({
     option,
     label: normalizeForMatch(option.label),
@@ -69,6 +70,16 @@ const Highlighted = memo(function Highlighted({ label, query }) {
 function OptionRow({ id, active, selected, disabled, onActivate, children, }) {
     return (_jsx("div", { role: "option", id: id, "aria-selected": selected, "aria-disabled": disabled || undefined, "data-active": active || undefined, className: OPTION_CLASS, onClick: onActivate, children: children }));
 }
+const PortalContainerContext = createContext(null);
+/**
+ * Combobox の一覧（md 以上）とシート（md 未満）を出す先を変える。既定は document.body。
+ * フォーカスを閉じ込めるモーダル（Radix の Dialog など）の中では、その箱を渡す
+ * （箱の外に出すと、モーダルが外側とみなして押す・打つ・スクロールを止める）。
+ * 一覧は position: fixed で置くので、渡す要素とその祖先に transform を付けない。
+ */
+export function ComboboxPortalContainer({ container, children, }) {
+    return _jsx(PortalContainerContext.Provider, { value: container, children: children });
+}
 /**
  * 検索つきの Combobox。文字を打って候補を絞り、1 つを選ぶ（docs/forms.md §8-3）。
  * フォーカスは入力欄に置いたまま、指している候補を aria-activedescendant で示す。
@@ -82,11 +93,10 @@ export function Combobox({ id, label, name, value, onValueChange, options = EMPT
     const labelId = `${baseId}label`;
     const optionId = (index) => `${baseId}option-${index}`;
     const isDesktop = useIsDesktop();
+    const portalContainer = useContext(PortalContainerContext);
     const inputRef = useRef(null);
     const sheetInputRef = useRef(null);
     const popupRef = useRef(null);
-    /** フォーカスを入力欄に戻すときに、もう一度開かないようにする */
-    const suppressOpenRef = useRef(false);
     /** 最後に選んだ・作った候補。親が options を更新するまでの間、入力欄に名前を出すため */
     const lastChosenRef = useRef(null);
     const [open, setOpen] = useState(false);
@@ -110,11 +120,12 @@ export function Combobox({ id, label, name, value, onValueChange, options = EMPT
     const query = typed ?? "";
     const trimmed = query.trim();
     const normalizedQuery = useMemo(() => normalizeQuery(query), [query]);
-    const indexed = useMemo(() => indexOptions(onSearch ? results : options), [onSearch, results, options]);
-    // サーバで検索するときは結果をそのまま出す。閉じているときは絞らない
-    const visible = useMemo(() => !open || onSearch || normalizedQuery === ""
+    // 照合用にそろえるのは開いている間だけ（閉じている間の再描画で全候補をそろえ直さない）
+    const indexed = useMemo(() => (open ? indexOptions(onSearch ? results : options) : EMPTY_INDEXED), [open, onSearch, results, options]);
+    // サーバで検索するときは結果をそのまま出す
+    const visible = useMemo(() => onSearch || normalizedQuery === ""
         ? indexed
-        : indexed.filter(({ label: l, reading }) => l.includes(normalizedQuery) || (reading?.includes(normalizedQuery) ?? false)), [open, onSearch, normalizedQuery, indexed]);
+        : indexed.filter(({ label: l, reading }) => l.includes(normalizedQuery) || (reading?.includes(normalizedQuery) ?? false)), [onSearch, normalizedQuery, indexed]);
     const exactExists = normalizedQuery !== "" && visible.some(({ label: l }) => l === normalizedQuery);
     const showCreate = onCreate !== undefined && trimmed !== "" && !exactExists && !loading;
     const entries = visible.map(({ option }) => ({ kind: "option", option }));
@@ -173,12 +184,8 @@ export function Combobox({ id, label, name, value, onValueChange, options = EMPT
         setActiveIndex(-1);
         cancelSearch();
     };
-    /** 元の入力欄にフォーカスを戻す（開き直さない） */
-    const focusInput = () => {
-        suppressOpenRef.current = true;
-        inputRef.current?.focus();
-        suppressOpenRef.current = false;
-    };
+    /** 元の入力欄にフォーカスを戻す（フォーカスだけでは開かない） */
+    const focusInput = () => inputRef.current?.focus();
     const choose = (option) => {
         lastChosenRef.current = option;
         onValueChange(option.value);
@@ -355,10 +362,10 @@ export function Combobox({ id, label, name, value, onValueChange, options = EMPT
         placeholder,
         onChange: handleTextChange,
     };
-    return (_jsxs("div", { className: cx("relative", className), children: [_jsx("input", { ...comboboxInputProps, ref: inputRef, id: inputId, "aria-expanded": open, "aria-haspopup": isDesktop ? undefined : "dialog", "aria-activedescendant": isDesktop ? activeId : undefined, "aria-invalid": ariaInvalid, "aria-describedby": ariaDescribedBy, readOnly: !isDesktop, required: required, disabled: disabled, value: open && isDesktop ? (typed ?? selectedLabel) : selectedLabel, className: cx(INPUT_CLASS, showClear ? "pr-20" : "pr-10"), onFocus: () => {
-                    if (!suppressOpenRef.current)
-                        openList();
-                }, onClick: openList, onBlur: () => {
+    return (_jsxs("div", { className: cx("relative", className), children: [_jsx("input", { ...comboboxInputProps, ref: inputRef, id: inputId, "aria-expanded": open, "aria-haspopup": isDesktop ? undefined : "dialog", "aria-activedescendant": isDesktop ? activeId : undefined, "aria-invalid": ariaInvalid, "aria-describedby": ariaDescribedBy, readOnly: !isDesktop, required: required, disabled: disabled, value: open && isDesktop ? (typed ?? selectedLabel) : selectedLabel, className: cx(INPUT_CLASS, showClear ? "pr-20" : "pr-10"), 
+                // フォーカスだけでは開かない（モーダルが最初の項目にフォーカスしたときに一覧を出さない）。
+                // 押したとき（chevron は pointer-events-none なので入力欄が受ける）・打ったとき・↓↑ で開く
+                onClick: openList, onBlur: () => {
                     if (open && isDesktop)
                         closeList();
                 }, onKeyDown: handleInputKeyDown }), name !== undefined && _jsx("input", { type: "hidden", name: name, value: value ?? "" }), showClear && (_jsx("button", { type: "button", "aria-label": "\u9078\u629E\u3092\u89E3\u9664", className: "absolute right-8 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-md text-icon hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring", onClick: clear, children: _jsx(XIcon, { className: "size-5" }) })), _jsx(ChevronDownIcon, { className: "pointer-events-none absolute right-3 top-1/2 size-5 -translate-y-1/2 text-icon" }), _jsx("span", { role: "status", className: "sr-only", children: status }), open &&
@@ -366,11 +373,11 @@ export function Combobox({ id, label, name, value, onValueChange, options = EMPT
                 position &&
                 createPortal(_jsxs("div", { ref: popupRef, className: "fixed z-250 max-h-72 overflow-y-auto rounded-md border border-border bg-popover py-1 text-popover-foreground shadow-md", style: { top: position.top, left: position.left, width: position.width }, 
                     // 押してもフォーカスを入力欄から動かさない（離れたとみなして閉じないように）
-                    onMouseDown: (e) => e.preventDefault(), children: [_jsx("span", { id: labelId, className: "sr-only", children: label }), listContent(labelId)] }), document.body), sheetOpen &&
+                    onMouseDown: (e) => e.preventDefault(), children: [_jsx("span", { id: labelId, className: "sr-only", children: label }), listContent(labelId)] }), portalContainer ?? document.body), sheetOpen &&
                 createPortal(_jsxs(Sheet, { titleId: titleId, title: label, onClose: () => {
                         closeList();
                         focusInput();
-                    }, children: [_jsx("div", { className: "shrink-0 border-b border-border p-4", children: _jsx("input", { ...comboboxInputProps, ref: sheetInputRef, "aria-expanded": "true", "aria-labelledby": titleId, "aria-activedescendant": activeId, value: query, className: INPUT_CLASS, onKeyDown: handleListKeys }) }), _jsx("div", { className: "flex-1 overflow-y-auto pt-1 pb-[env(safe-area-inset-bottom)]", children: listContent(titleId) })] }), document.body)] }));
+                    }, children: [_jsx("div", { className: "shrink-0 border-b border-border p-4", children: _jsx("input", { ...comboboxInputProps, ref: sheetInputRef, "aria-expanded": "true", "aria-labelledby": titleId, "aria-activedescendant": activeId, value: query, className: INPUT_CLASS, onKeyDown: handleListKeys }) }), _jsx("div", { className: "flex-1 overflow-y-auto pt-1 pb-[env(safe-area-inset-bottom)]", children: listContent(titleId) })] }), portalContainer ?? document.body)] }));
 }
 const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 /** md 未満の全画面のシート（docs/components.md §7-3 の箱と、下層ヘッダーと同じ形のヘッダー） */
