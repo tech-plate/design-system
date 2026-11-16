@@ -10,9 +10,11 @@
  *   - tokens/index.d.ts   その型定義
  *   - tailwind/preset.js  Tailwind v3 preset（CSS 変数を参照するだけの薄いアダプタ + typography）
  *   - tailwind/v4.css     Tailwind v4 @theme inline（同上）+ typography 用の @theme + cursor の @layer base
+ *                         + React 部品（react/dist）を走査させる @source
  *
  * 生成物はリポジトリにコミットし、npm パッケージにもそのまま同梱する
  * （インストール時にビルドが走らなくても動くようにする。prepare / prepublish に依存しない）。
+ * React の部品の react/dist（`npm run build:react` = tsc の生成物）も同じ扱いでコミットする。
  */
 
 import { writeFileSync } from "node:fs";
@@ -277,6 +279,12 @@ function buildV4Css(entries, json) {
 
 /* tokens.css は .dark クラスで切り替える方式のため、v4 の dark: バリアントもクラス基準にする */
 @custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * @tech-plate/design-system/react の部品が使うクラスを、消費側の Tailwind に生成させる
+ * （node_modules は既定で走査されないため。部品を使わないなら生成されるクラスが増えるだけで害はない）
+ */
+@source "../react/dist";
 
 @theme inline {
 ${lines.join("\n")}

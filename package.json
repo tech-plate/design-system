@@ -1,7 +1,7 @@
 {
   "name": "@tech-plate/design-system",
   "version": "0.10.0",
-  "description": "全社共通のデザイントークン（CSS 変数）とデザインルール。Tailwind v3 / v4 の両方から参照できる薄いアダプタと、生カラーを止める lint 付き。",
+  "description": "全社共通のデザイントークン（CSS 変数）とデザインルール。Tailwind v3 / v4 の両方から参照できる薄いアダプタと、生カラーを止める lint 付き。React の共通部品（Combobox）も同梱する。",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -14,7 +14,15 @@
     },
     "./tokens.css": "./tokens/tokens.css",
     "./tailwind-v4.css": "./tailwind/v4.css",
-    "./preset": "./tailwind/preset.js"
+    "./preset": "./tailwind/preset.js",
+    "./react": {
+      "types": "./react/dist/index.d.ts",
+      "default": "./react/dist/index.js"
+    },
+    "./match": {
+      "types": "./react/dist/normalize.d.ts",
+      "default": "./react/dist/normalize.js"
+    }
   },
   "bin": {
     "design-system-lint": "./scripts/lint-raw-colors.mjs"
@@ -22,17 +30,45 @@
   "files": [
     "tokens",
     "tailwind",
+    "react/dist",
+    "react/package.json",
     "docs",
     "scripts/lint-raw-colors.mjs",
     "README.md"
   ],
   "scripts": {
     "build": "node scripts/build-tokens.mjs",
+    "build:react": "tsc -p react/tsconfig.json",
     "check": "node scripts/check-contrast.mjs",
-    "lint": "node scripts/lint-raw-colors.mjs"
+    "lint": "node scripts/lint-raw-colors.mjs tailwind tokens react/src",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build && npm run build:react && npm run lint && npm test"
   },
   "dependencies": {},
-  "devDependencies": {},
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.12",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "jsdom": "^31.0.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  },
   "sideEffects": [
     "*.css"
   ],

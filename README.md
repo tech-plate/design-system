@@ -10,8 +10,10 @@
 - **正（single source of truth）は CSS 変数**（`tokens/tokens.css`）。
   消費側の Tailwind バージョンが v3 / v4 で分かれているため、`tailwind.config.ts` を共有物にせず、
   CSS 変数を正として **v3 preset と v4 `@theme inline` はそこを参照するだけの薄いアダプタ**にしている。
-- **React コンポーネントも shadcn registry も配布しない。** 実装は各プロダクトが持ち、
+- **React コンポーネントは原則配布しない（shadcn registry も配布しない）。** 実装は各プロダクトが持ち、
   ここでは [docs/components.md](./docs/components.md) に「ルール」だけを置く。
+  例外は、振る舞いが複雑でプロダクトごとに作るとずれやすい部品だけで、`@tech-plate/design-system/react` から配る
+  （今は `Combobox` だけ。下の「React の部品」）。
 
 ## ドキュメント
 
@@ -40,8 +42,8 @@ pnpm add @tech-plate/design-system@^0.10.0
 0.x の間は、`^0.10.0` は 0.10.x だけを受け入れる（0.11.0 には自動で上がらない）。
 トークンの値や docs のルールが変わるのはマイナー（0.10 → 0.11）なので、上げるときに消費側で見た目とコントラストを確かめる。
 
-生成物（`tokens/tokens.css` `tokens/index.mjs` `tokens/index.d.ts` `tailwind/preset.js` `tailwind/v4.css`）は
-**パッケージに同梱済み**なので、インストール時にビルドは走らない。ランタイム依存はゼロ。
+生成物（`tokens/tokens.css` `tokens/index.mjs` `tokens/index.d.ts` `tailwind/preset.js` `tailwind/v4.css`、React の部品の `react/dist`）は
+**パッケージに同梱済み**なので、インストール時にビルドは走らない。ランタイム依存はゼロ（React の部品を使うときだけ、peerDependencies の `react` / `react-dom` 19 以上が要る）。
 認証も要らない（public パッケージなので、Docker・Vercel・GitHub Actions でも追加の設定なしで入る）。
 
 ## 導入手順: Tailwind CSS v3
@@ -163,6 +165,44 @@ Tailwind v4 は `@theme` の変数を `:root` に出すので、消費側が `:r
 
 フォントファイルの配信（自前配信、`next/font` 等）は各プロダクトの責務。
 
+## React の部品（`@tech-plate/design-system/react`）
+
+docs の規定どおりに作った部品を配る。今あるのは `Combobox`（[docs/forms.md](./docs/forms.md) §8-3）だけ。
+
+```tsx
+import { Combobox } from "@tech-plate/design-system/react";
+
+<Field label="担当者" required error={errors.assigneeId}>
+  <Combobox
+    id="assigneeId"               // Field の <label htmlFor> と合わせる
+    label="担当者"                 // <label> と同じ文字。一覧の名前とスマホのシートのタイトル
+    value={assigneeId}            // 未選択は null
+    onValueChange={setAssigneeId} // 候補を選んだ・× で解除した（null）ときだけ呼ばれる
+    options={staff}               // { value, label, reading?, disabled? }[]
+    noun="担当者"                  // 「「〇〇」に一致する担当者がありません」
+    required                      // 必須なら × の解除ボタンを出さない
+    aria-invalid={!!errors.assigneeId}
+    aria-describedby={errors.assigneeId ? "assigneeId-error" : undefined}
+  />
+</Field>
+```
+
+各 props の意味（サーバで検索する `onSearch`、その場で作る `onCreate` など）は型定義の JSDoc に書いてある。ここには部品をまたぐ約束だけを置く。
+
+- **Tailwind は v4 だけ。** `tailwind-v4.css` を読み込んでいれば、部品が使うクラスは消費側の Tailwind が生成する（`tailwind-v4.css` の中の `@source "../react/dist"`）。`@source` を足す必要はない。
+- **React 19 以上。** `react` / `react-dom` は peerDependencies（トークンだけ使うプロダクトに入れさせないよう optional）。ランタイム依存は無く（アイコンも SVG を中に持つ）、素の ESM と型定義で配るので `transpilePackages` も要らない。
+- 部品のファイルに `"use client"` が付いているので、Server Component からそのまま import できる。
+- **`md` 未満では全画面のシートで開く**（docs/forms.md §8-3 のスマホ）。画面側で出し分けない。
+- **サーバで検索するときも、選ばれている候補は `options` に入れて渡す。** 入力欄に名前を出すため（選んだ直後は部品が覚えているが、画面を開き直したときに要る）。
+- **サーバ側の検索は `@tech-plate/design-system/match` で同じそろえ方にする。** React を読み込まない入口なので、Hono などのサーバや Server Component からも使える。
+
+```ts
+import { matchesOption, normalizeQuery, normalizeForMatch } from "@tech-plate/design-system/match";
+
+const found = staff.filter((s) => matchesOption(s, query)); // 部分一致。名前と読みの両方に当てる
+// DB で検索するなら、保存する側の列を normalizeForMatch で、入力を normalizeQuery でそろえて比べる
+```
+
 ## JS / TS からトークン値を参照する
 
 クラス名が使えない箇所（canvas 描画、グラフライブラリ等）でのみ使う。
@@ -215,7 +255,15 @@ font-sans  leading-relaxed  leading-tight
 2. `pnpm build`（= `node scripts/build-tokens.mjs`）で生成物を更新する
 3. **`pnpm check`（= `node scripts/check-contrast.mjs`）が通ることを確認する**
    — WCAG 2.2 AA（テキスト 4.5:1、非テキスト 3:1）未満のペアがあれば exit 1 になる
-4. 生成物を含めてコミットし、`package.json` の `version` を上げて npm に publish する（タグ `vX.Y.Z` も切る）
+4. 生成物を含めてコミットし、`package.json` の `version` を上げて npm に publish する（タグ `vX.Y.Z` も切る）。
+   publish の前に `prepublishOnly` が `build`・`build:react`・`lint`・`test` を回す
+
+### React の部品を変更する手順
+
+1. `npm install`（開発用の依存を入れる。React の部品の開発にだけ使う）
+2. テストを先に書く（`react/src/*.test.tsx`、vitest + jsdom + Testing Library）。`npm test` で回す
+3. `react/src` を直す。クラスはトークンの語彙だけ（`npm run lint` が生カラーを止める）
+4. `npm run build:react` で `react/dist`（ESM と型定義）を作り、`react/src` と一緒にコミットする（tokens の生成物と同じ扱い）
 
 ### ⚠️ 手編集禁止
 
@@ -226,6 +274,8 @@ font-sans  leading-relaxed  leading-tight
 - `tokens/index.d.ts`
 - `tailwind/preset.js`
 - `tailwind/v4.css`
+
+`react/dist` も `react/src` からの生成物（`npm run build:react`）なので、直接編集しない。
 
 ### コントラスト検証の対象
 
