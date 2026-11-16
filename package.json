@@ -1,6 +1,6 @@
 {
   "name": "@tech-plate/design-system",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "description": "全社共通のデザイントークン（CSS 変数）とデザインルール。Tailwind v3 / v4 の両方から参照できる薄いアダプタと、生カラーを止める lint 付き。React の共通部品（Combobox）も同梱する。",
   "license": "MIT",
   "repository": {

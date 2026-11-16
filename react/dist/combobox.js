@@ -177,6 +177,9 @@ export function Combobox({ id, label, name, value, onValueChange, options = EMPT
         setCreateFailed(false);
         setOpen(true);
         search("", 0);
+        // 入力欄には選ばれている候補の名前が出ている。全体を選んでおき、打った文字で置き換える（名前の後ろに足さない）
+        if (isDesktop)
+            inputRef.current?.select();
     };
     const closeList = () => {
         setOpen(false);

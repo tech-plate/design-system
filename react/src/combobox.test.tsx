@@ -243,6 +243,30 @@ describe("Combobox: 絞り込み", () => {
     expect(strong.className).toContain("font-semibold");
   });
 
+  it("選ばれている状態で押して開くと名前の全体を選び、打った文字で置き換えて絞る", async () => {
+    const user = userEvent.setup();
+    render(<Harness initial="1" />);
+    await user.click(input());
+    expect(input().selectionStart).toBe(0);
+    expect(input().selectionEnd).toBe("山田 太郎".length);
+    await user.keyboard("佐藤");
+    expect(input().value).toBe("佐藤");
+    expect(optionLabels()).toEqual(["佐藤 花子"]);
+    await user.keyboard("{Escape}");
+    expect(input().value).toBe("山田 太郎");
+  });
+
+  it("↓ で開いたときも名前の全体を選ぶ", async () => {
+    const user = userEvent.setup();
+    render(<Harness initial="1" />);
+    act(() => input().focus());
+    await user.keyboard("{ArrowDown}");
+    expect(input().selectionStart).toBe(0);
+    expect(input().selectionEnd).toBe("山田 太郎".length);
+    await user.keyboard("さくら");
+    expect(optionLabels()).toEqual(["サクラ商店"]);
+  });
+
   it("選ばれている状態で開くと、入力欄は名前のままで全候補を出す", async () => {
     const user = userEvent.setup();
     render(<Harness initial="1" />);
