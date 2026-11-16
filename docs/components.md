@@ -1,7 +1,7 @@
 # コンポーネントのルール
 
 このリポジトリは **React コンポーネントを原則配布しない**。実装は各プロダクトが自前で持つ。
-例外は `@tech-plate/design-system/react` で配る部品（今は [forms.md](./forms.md) §8-3 の `Combobox` だけ）。
+例外は `@tech-plate/design-system/react` で配る部品（今は [forms.md](./forms.md) §8-3 の `Combobox` と [layout.md](./layout.md) §7-1 の `ScrollableTableContainer`）。
 ここに書くのは、どのプロダクトでも守る **ルール**と、**部品ごとの仕様**（variant・サイズ・状態ごとの見た目）。
 仕様があれば、誰が実装しても同じ見た目になる。
 

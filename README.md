@@ -13,7 +13,7 @@
 - **React コンポーネントは原則配布しない（shadcn registry も配布しない）。** 実装は各プロダクトが持ち、
   ここでは [docs/components.md](./docs/components.md) に「ルール」だけを置く。
   例外は、振る舞いが複雑でプロダクトごとに作るとずれやすい部品だけで、`@tech-plate/design-system/react` から配る
-  （今は `Combobox` だけ。下の「React の部品」）。
+  （今は `Combobox` と `ScrollableTableContainer`。下の「React の部品」）。
 
 ## ドキュメント
 
@@ -167,7 +167,7 @@ Tailwind v4 は `@theme` の変数を `:root` に出すので、消費側が `:r
 
 ## React の部品（`@tech-plate/design-system/react`）
 
-docs の規定どおりに作った部品を配る。今あるのは `Combobox`（[docs/forms.md](./docs/forms.md) §8-3）だけ。
+docs の規定どおりに作った部品を配る。今あるのは `Combobox`（[docs/forms.md](./docs/forms.md) §8-3）と `ScrollableTableContainer`（[docs/layout.md](./docs/layout.md) §7-1）。
 
 ```tsx
 import { Combobox } from "@tech-plate/design-system/react";
@@ -224,6 +224,28 @@ const [box, setBox] = useState<HTMLDivElement | null>(null);
 - **渡す要素とその祖先に CSS の `transform` を付けない。** 一覧は `position: fixed` で入力欄の下に置くので、transform のある祖先があるとそこが基準になり、位置がずれる（`translate-x-[-50%]` などで中央に寄せる箱がこれに当たる。flex / grid で中央に寄せる）。
 - **Esc:** 一覧が開いているときの Esc は部品が `stopPropagation` して外へ伝えない（一覧だけを閉じる）。ただし document に capture で Esc を受けるモーダル（Radix の DismissableLayer など）には部品より先に届くので、モーダル側で `event.target` が `[role=combobox][aria-expanded=true]` のときは閉じないようにする（Radix なら `onEscapeKeyDown` で `event.preventDefault()`）。
 
+
+### 幅の広い表の枠（`ScrollableTableContainer`）
+
+[docs/layout.md](./docs/layout.md) §7-1 の枠。横は枠の中だけでスクロールし、縦は画面ごとスクロールする。見出し行は画面の上端の帯の下に貼り付き、
+はみ出しているときだけ、画面下端の代わりの横スクロールバー・隠れている側の端の影・「Shift＋マウスホイールで横に移動」の案内（× で閉じたらそのブラウザでは以後出さない）を出す。
+
+```tsx
+import { ScrollableTableContainer } from "@tech-plate/design-system/react";
+
+<div className="rounded-lg border border-border bg-card">  {/* 外周の罫線・地色・角丸は入れ物が持つ */}
+  <ScrollableTableContainer label="経費の一覧">         {/* はみ出しているときの領域の名前（必須） */}
+    <table className="w-full border-collapse">…</table>  {/* <thead> を持つ表 */}
+  </ScrollableTableContainer>
+</div>
+```
+
+- **外周の罫線・地色・角丸は付けない。** 入れ物（Card など）が持ち、枠は入れ物の角丸を受け継いで中身を切り抜く（`rounded-[inherit]`）。枠そのものに付けたいときは `className` で足す。
+- **見出し行を止める位置は CSS 変数 `--app-header-height`**（上端に貼り付く帯の高さ。無ければ画面の上端）。レイアウトで `:root { --app-header-height: 4rem; }` のように 1 か所に書き、ページごとに渡さない。
+- **見出しのセルに上の罫線を付けない**（部品が `border-t-0` にする。外周の線は入れ物が引く）。先頭の列は `sticky left-0` で固定できる（左の影は固定列の右から出る）。
+- **枠の祖先に `overflow-hidden` / `overflow-x-auto` を置かない。** 下端の代わりのバー（`sticky bottom-0`）が画面に貼り付かなくなる。
+- 案内を閉じたことは `localStorage` のキー `X_SCROLL_HINT_DISMISSED_KEY`（export している）に覚える。指で操作する端末（`pointer: coarse`）では案内を出さない。
+- ホイールの線の動き（`animate-wheel-scroll`）の keyframes は `tailwind-v4.css` に入っている。プロダクト側の CSS は要らない。
 
 ## JS / TS からトークン値を参照する
 

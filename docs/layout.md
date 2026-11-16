@@ -141,6 +141,7 @@
 
 - `md` 未満の一覧は §1-2 のカード表示のまま。行と列の両方に意味がある表（予定表・比較表）は `md` 未満でもこの枠で横スクロールさせる。
 - 採用: kanrichan（#1302 / PR #1303、2026-10-30。`apps/admin/src/components/ui/scrollable-table-container.tsx`）。
+- この節の規定どおりに作った枠を `@tech-plate/design-system/react` の `ScrollableTableContainer` として配っている（使い方は [README](../README.md) の「幅の広い表の枠」）。自前で作らずこれを使う。
 - ※ 0.8.x までの「ページ全体を横スクロールさせてよい」例外（#9）は 0.9.0 で廃止した。横に送ると表の周りのカードやページ上部の操作まで一緒に流れ、表がカードの外まで伸びて崩れて見えるため。
 
 ## 8. やらないこと

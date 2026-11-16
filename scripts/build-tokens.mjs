@@ -10,7 +10,7 @@
  *   - tokens/index.d.ts   その型定義
  *   - tailwind/preset.js  Tailwind v3 preset（CSS 変数を参照するだけの薄いアダプタ + typography）
  *   - tailwind/v4.css     Tailwind v4 @theme inline（同上）+ typography 用の @theme + cursor の @layer base
- *                         + React 部品（react/dist）を走査させる @source
+ *                         + React 部品（react/dist）を走査させる @source と、部品が使う keyframes の @theme
  *
  * 生成物はリポジトリにコミットし、npm パッケージにもそのまま同梱する
  * （インストール時にビルドが走らなくても動くようにする。prepare / prepublish に依存しない）。
@@ -302,6 +302,32 @@ ${lines.join("\n")}
 ${ownEntries(json.typography)
   .map(([name, def]) => `  --${name}: ${typographyValue(def)};`)
   .join("\n")}
+}
+
+/*
+ * React の部品 ScrollableTableContainer の「Shift＋マウスホイール」の案内で、マウスのホイールの線を 3 回下へ流して止める
+ * （animate-wheel-scroll。動き続けない。部品側で motion-reduce:animate-none を併記する）。
+ * keyframes は Tailwind のクラスでは書けないので @theme に置く（使われたときだけ出力される）。
+ */
+@theme {
+  --animate-wheel-scroll: wheel-scroll 1.2s ease-in-out 3;
+
+  /* 下へ流れて消え、上から戻る。最後は元の位置で止まる */
+  @keyframes wheel-scroll {
+    0%,
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    50% {
+      transform: translateY(4px);
+      opacity: 0;
+    }
+    51% {
+      transform: translateY(-3px);
+      opacity: 0;
+    }
+  }
 }
 
 /*

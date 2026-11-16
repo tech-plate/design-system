@@ -92,6 +92,32 @@
 }
 
 /*
+ * React の部品 ScrollableTableContainer の「Shift＋マウスホイール」の案内で、マウスのホイールの線を 3 回下へ流して止める
+ * （animate-wheel-scroll。動き続けない。部品側で motion-reduce:animate-none を併記する）。
+ * keyframes は Tailwind のクラスでは書けないので @theme に置く（使われたときだけ出力される）。
+ */
+@theme {
+  --animate-wheel-scroll: wheel-scroll 1.2s ease-in-out 3;
+
+  /* 下へ流れて消え、上から戻る。最後は元の位置で止まる */
+  @keyframes wheel-scroll {
+    0%,
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    50% {
+      transform: translateY(4px);
+      opacity: 0;
+    }
+    51% {
+      transform: translateY(-3px);
+      opacity: 0;
+    }
+  }
+}
+
+/*
  * 押せるものは pointer。v4 の preflight はボタンを cursor: default にするため、
  * Tailwind 公式の v3→v4 移行ガイドどおり戻す（v3 の preflight は元から pointer なので preset には不要）。
  * 無効なもの（disabled / aria-disabled="true"）は除き、部品側で cursor-not-allowed を付ける（docs/components.md §1-7）。
