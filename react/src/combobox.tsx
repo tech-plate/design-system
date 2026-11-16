@@ -15,9 +15,9 @@ import {
   type ChangeEvent,
   type KeyboardEvent,
   type ReactNode,
-  type SVGProps,
 } from "react";
 import { createPortal } from "react-dom";
+import { cx, Icon, XIcon } from "./internal.js";
 import { matchRangeNormalized, normalizeForMatch, normalizeQuery, type ComboboxOption } from "./normalize.js";
 
 /** 検索つきの Combobox（1 つだけ選ぶ）。仕様は docs/forms.md §8-3 */
@@ -75,7 +75,6 @@ const ERROR_NOTE_CLASS = "flex min-h-11 items-center px-3 py-2 text-sm text-dest
 const SEARCH_FAILED_MESSAGE = "候補を読み込めませんでした。時間をおいてもう一度入力してください";
 const CREATE_FAILED_MESSAGE = "追加できませんでした。時間をおいてもう一度押してください";
 
-const cx = (...classes: (string | false | undefined)[]) => classes.filter(Boolean).join(" ");
 
 /** 照合用にそろえた名前・読みを持たせた候補 */
 type IndexedOption = { option: ComboboxOption; label: string; reading?: string };
@@ -126,24 +125,6 @@ function handleEscape(event: KeyboardEvent, close: () => void): boolean {
   return true;
 }
 
-function Icon({ children, ...props }: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-      {...props}
-    >
-      {children}
-    </svg>
-  );
-}
 const ChevronDownIcon = ({ className }: { className: string }) => (
   <Icon className={className}>
     <path d="m6 9 6 6 6-6" />
@@ -152,12 +133,6 @@ const ChevronDownIcon = ({ className }: { className: string }) => (
 const CheckIcon = ({ className }: { className: string }) => (
   <Icon className={className}>
     <path d="M20 6 9 17l-5-5" />
-  </Icon>
-);
-const XIcon = ({ className }: { className: string }) => (
-  <Icon className={className}>
-    <path d="M18 6 6 18" />
-    <path d="m6 6 12 12" />
   </Icon>
 );
 
