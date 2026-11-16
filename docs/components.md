@@ -1,7 +1,7 @@
 # コンポーネントのルール
 
 このリポジトリは **React コンポーネントを原則配布しない**。実装は各プロダクトが自前で持つ。
-例外は `@tech-plate/design-system/react` で配る部品（今は [forms.md](./forms.md) §8-3 の `Combobox` だけ）。
+例外は `@tech-plate/design-system/react` で配る部品（今は [forms.md](./forms.md) §8-3 の `Combobox` と、§7-4 の確認ダイアログ `ConfirmDialog` / `ConfirmActions`）。
 ここに書くのは、どのプロダクトでも守る **ルール**と、**部品ごとの仕様**（variant・サイズ・状態ごとの見た目）。
 仕様があれば、誰が実装しても同じ見た目になる。
 
@@ -536,6 +536,10 @@ Button の `secondary` / `outline` / `ghost`、FilterChip（非選択）、ア�
 | 保存失敗 | 本文の先頭に Alert（`destructive`）。モーダルの背後の画面に出しても、開いている間は見えない | 同左 |
 
 ### 7-4. 確認ダイアログ
+
+**React では `@tech-plate/design-system/react` の `ConfirmDialog` を使う**（自前で作らない。使い方・入れ子のモーダルの中での置き方は [README](../README.md) の「確認ダイアログ」）。
+入力欄を持つ Modal のフッターには、ボタン行だけの `ConfirmActions` を使う（並びと初期フォーカスは下の表のとおり）。
+下の表は、React 以外で作るときと、部品の中身を確かめるときの正。
 
 | 項目 | クラス・規定 |
 |------|------------|
