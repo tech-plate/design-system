@@ -1,6 +1,7 @@
 "use client";
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useSyncExternalStore } from "react";
+import { cx, Icon, XIcon } from "./internal.js";
 import { useStickyHeadInXScroller } from "./use-sticky-head-in-x-scroller.js";
 const ROOT_CLASS = "relative isolate w-full min-w-0 rounded-[inherit] [&_thead]:relative [&_thead]:z-20 [&_thead]:top-[var(--x-head-shift,0px)] [&_thead_th]:border-t-0";
 const SCROLLER_CLASS = "relative overflow-x-auto overflow-y-hidden rounded-[inherit] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -16,6 +17,7 @@ const SHADOW_SIDE_CLASS = {
     right: "right-0 bg-linear-to-l",
 };
 const SIDES = ["left", "right"];
+const SHADOW_CLASS = "pointer-events-none absolute inset-y-0 z-30 w-6 from-foreground/10 to-transparent";
 /**
  * 案内を置く高さ。重ねる箱の上余白（表が画面に収まっているとき）と、表が縦に長いときに止まる位置の両方を
  * 見出し行（--x-head-height）の 0.5rem 下にそろえる。止まる位置は上端の帯（--app-header-height）の下。
@@ -28,64 +30,71 @@ const HINT_CLOSE_CLASS = "inline-flex size-8 shrink-0 items-center justify-cente
 /** 案内を閉じたことを覚えるキー。閉じた人は分かっている人なので、そのブラウザでは以後出さない */
 export const X_SCROLL_HINT_DISMISSED_KEY = "tech-plate-design-system:x-scroll-hint-dismissed";
 // 閉じた状態は画面内の全部の表で共有する（片方で閉じたらもう片方も消す）。別タブで閉じたら storage イベントで追う。
-// localStorage は描画のたびには読まず、最初の購読・storage イベント・閉じたときだけ読む
+// localStorage は描画のたびには読まず、表を出して最初の getSnapshot（閉じた人に 1 フレームも出さないよう、描く前に読む）と
+// storage イベントのときだけ読む。localStorage が使えない環境（プライベートブラウズ等）では、表を出している間だけ閉じる
 const hintListeners = new Set();
-/** localStorage が使えない環境（プライベートブラウズ等）では、ページを開いている間だけ閉じる */
-let dismissedWithoutStorage = false;
-let hintDismissed = false;
+let hintDismissed;
 function readHintDismissed() {
     try {
-        hintDismissed = window.localStorage.getItem(X_SCROLL_HINT_DISMISSED_KEY) !== null;
+        return window.localStorage.getItem(X_SCROLL_HINT_DISMISSED_KEY) !== null;
     }
     catch {
-        hintDismissed = dismissedWithoutStorage;
+        return false;
     }
+}
+function getHintDismissed() {
+    hintDismissed ??= readHintDismissed();
+    return hintDismissed;
 }
 function notifyHint() {
     for (const listener of hintListeners)
         listener();
 }
-function onStorage() {
-    readHintDismissed();
+function onStorage(event) {
+    // localStorage.clear() は key が null で届く
+    if (event.key !== null && event.key !== X_SCROLL_HINT_DISMISSED_KEY)
+        return;
+    hintDismissed = readHintDismissed();
     notifyHint();
 }
 function subscribeHint(listener) {
-    if (hintListeners.size === 0) {
-        readHintDismissed();
+    if (hintListeners.size === 0)
         window.addEventListener("storage", onStorage);
-    }
     hintListeners.add(listener);
     return () => {
         hintListeners.delete(listener);
-        if (hintListeners.size === 0)
-            window.removeEventListener("storage", onStorage);
+        if (hintListeners.size > 0)
+            return;
+        window.removeEventListener("storage", onStorage);
+        // 表が 1 つも無い間の別タブの変化は追えないので、次に表を出すときに読み直す
+        hintDismissed = undefined;
     };
 }
 function dismissHint() {
+    hintDismissed = true;
     try {
         window.localStorage.setItem(X_SCROLL_HINT_DISMISSED_KEY, "1");
     }
     catch {
-        dismissedWithoutStorage = true;
+        // 覚えられなくても、このページを開いている間は閉じたまま
     }
-    readHintDismissed();
     notifyHint();
 }
-/** ホイールの線が縦に流れるマウスの絵。出るたびに 3 回流して止める（animate-wheel-scroll は tailwind-v4.css。reduced-motion では動かさない） */
+/** ホイールの線が縦に流れるマウスの絵。出るたびに 3 回流して止める（animate-tp-wheel-scroll は tailwind-v4.css。reduced-motion では動かさない） */
 function WheelMouseIcon() {
-    return (_jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true", focusable: "false", className: "size-5 shrink-0 text-icon-strong", children: [_jsx("rect", { x: "5", y: "2", width: "14", height: "20", rx: "7" }), _jsx("path", { d: "M12 6v4", className: "animate-wheel-scroll motion-reduce:animate-none" })] }));
+    return (_jsxs(Icon, { className: "size-5 shrink-0 text-icon-strong", children: [_jsx("rect", { x: "5", y: "2", width: "14", height: "20", rx: "7" }), _jsx("path", { d: "M12 6v4", className: "animate-tp-wheel-scroll motion-reduce:animate-none" })] }));
 }
 /** 「Shift＋マウスホイールで横に移動」の案内。閉じる（×）まで出し続ける。表の中の右端、見出し行の下に浮かせる */
 function XScrollHint() {
     // サーバでは閉じた扱い（出さない）。この部品ははみ出しを測った後にしか描かないので食い違わない
-    const dismissed = useSyncExternalStore(subscribeHint, () => hintDismissed, () => true);
+    const dismissed = useSyncExternalStore(subscribeHint, getHintDismissed, () => true);
     if (dismissed)
         return null;
-    return (_jsx("div", { className: HINT_BOX_CLASS, children: _jsxs("p", { "data-scroll-hint": "", className: HINT_CLASS, children: [_jsx(WheelMouseIcon, {}), "Shift\uFF0B\u30DE\u30A6\u30B9\u30DB\u30A4\u30FC\u30EB\u3067\u6A2A\u306B\u79FB\u52D5", _jsx("button", { type: "button", "aria-label": "\u6A2A\u30B9\u30AF\u30ED\u30FC\u30EB\u306E\u6848\u5185\u3092\u9589\u3058\u308B", className: HINT_CLOSE_CLASS, onClick: dismissHint, children: _jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true", focusable: "false", className: "size-4", children: [_jsx("path", { d: "M18 6 6 18" }), _jsx("path", { d: "m6 6 12 12" })] }) })] }) }));
+    return (_jsx("div", { className: HINT_BOX_CLASS, children: _jsxs("p", { "data-scroll-hint": "", className: HINT_CLASS, children: [_jsx(WheelMouseIcon, {}), "Shift\uFF0B\u30DE\u30A6\u30B9\u30DB\u30A4\u30FC\u30EB\u3067\u6A2A\u306B\u79FB\u52D5", _jsx("button", { type: "button", "aria-label": "\u6A2A\u30B9\u30AF\u30ED\u30FC\u30EB\u306E\u6848\u5185\u3092\u9589\u3058\u308B", className: HINT_CLOSE_CLASS, onClick: dismissHint, children: _jsx(XIcon, { className: "size-4" }) })] }) }));
 }
 /** 隠れている側の端にうっすら影を出す。見出し行（z-20）より上に重ね、押せる行の邪魔をしないよう pointer-events-none */
 function XScrollShadows({ sides }) {
-    return SIDES.map((side) => sides[side] ? (_jsx("div", { "aria-hidden": "true", "data-scroll-shadow": side, className: `pointer-events-none absolute inset-y-0 z-30 w-6 from-foreground/10 to-transparent ${SHADOW_SIDE_CLASS[side]}` }, side)) : null);
+    return SIDES.map((side) => sides[side] ? (_jsx("div", { "aria-hidden": "true", "data-scroll-shadow": side, className: cx(SHADOW_CLASS, SHADOW_SIDE_CLASS[side]) }, side)) : null);
 }
 /**
  * 幅の広い表の枠（docs/layout.md §7-1）。横は枠の中だけでスクロールし、縦は画面全体でスクロールする（表の中を縦にスクロールさせない）。
@@ -106,5 +115,5 @@ function XScrollShadows({ sides }) {
 export function ScrollableTableContainer({ label, className, children }) {
     const { rootRef, scrollerRef, proxyRef, probeRef, hiddenSides } = useStickyHeadInXScroller();
     const overflowing = hiddenSides.left || hiddenSides.right;
-    return (_jsxs("div", { ref: rootRef, className: className ? `${ROOT_CLASS} ${className}` : ROOT_CLASS, children: [_jsx("div", { ref: probeRef, "aria-hidden": "true", className: "pointer-events-none invisible absolute top-0 left-0 h-[var(--app-header-height,0px)] w-0" }), _jsxs("div", { className: "relative rounded-[inherit]", children: [_jsx("div", { ref: scrollerRef, role: overflowing ? "region" : undefined, "aria-label": overflowing ? label : undefined, tabIndex: overflowing ? 0 : undefined, className: SCROLLER_CLASS, children: children }), _jsx(XScrollShadows, { sides: hiddenSides }), overflowing && _jsx(XScrollHint, {})] }), _jsx("div", { ref: proxyRef, "aria-hidden": "true", tabIndex: -1, "data-x-scroll-proxy": "", className: overflowing ? PROXY_CLASS : "hidden", children: _jsx("div", { className: "h-px" }) })] }));
+    return (_jsxs("div", { ref: rootRef, className: cx(ROOT_CLASS, className), children: [_jsx("div", { ref: probeRef, "aria-hidden": "true", className: "pointer-events-none invisible absolute top-0 left-0 h-[var(--app-header-height,0px)] w-0" }), _jsxs("div", { className: "relative rounded-[inherit]", children: [_jsx("div", { ref: scrollerRef, role: overflowing ? "region" : undefined, "aria-label": overflowing ? label : undefined, tabIndex: overflowing ? 0 : undefined, className: SCROLLER_CLASS, children: children }), _jsx(XScrollShadows, { sides: hiddenSides }), overflowing && _jsx(XScrollHint, {})] }), _jsx("div", { ref: proxyRef, "aria-hidden": "true", tabIndex: -1, "data-x-scroll-proxy": "", className: overflowing ? PROXY_CLASS : "hidden", children: _jsx("div", { className: "h-px" }) })] }));
 }

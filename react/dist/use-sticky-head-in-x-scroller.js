@@ -50,6 +50,9 @@ export function useStickyHeadInXScroller() {
         let frame = 0;
         let shift = 0;
         let offset = 0;
+        let scrollWidth = 0;
+        let clientWidth = 0;
+        let table = null;
         let head = null;
         // 見出し行の 1 行目の左固定セル(position: sticky)。getComputedStyle は重いので見出しが替わったときだけ調べる
         let stickyCells = [];
@@ -75,15 +78,10 @@ export function useStickyHeadInXScroller() {
             if (frame === 0)
                 frame = requestAnimationFrame(updateShift);
         };
-        let scrollWidth = 0;
-        let clientWidth = 0;
-        let current = { left: false, right: false };
-        const updateHiddenSides = () => {
-            const next = hiddenSides({ scrollLeft: scroller.scrollLeft, clientWidth, scrollWidth });
-            if (next.left === current.left && next.right === current.right)
-                return;
-            current = next;
-            setSides(next);
+        // 隠れ側が変わらなければ前の値を返し、描き直さない
+        const updateHiddenSides = (scrollLeft) => {
+            const next = hiddenSides({ scrollLeft, clientWidth, scrollWidth });
+            setSides((prev) => (prev.left === next.left && prev.right === next.right ? prev : next));
         };
         // 書いた値を覚え、変わったときだけ書く(style の書き込みは再計算を起こす)
         const written = new Map();
@@ -93,48 +91,72 @@ export function useStickyHeadInXScroller() {
             written.set(name, value);
             root.style.setProperty(name, value);
         };
-        // 固定は左から詰めて並べる前提で、いちばん右の固定セルの右端を採る
-        const writeHeadMetrics = () => {
-            if (!head)
-                return;
-            const scrollerLeft = scroller.getBoundingClientRect().left;
-            let stickyRight = 0;
-            for (const cell of stickyCells) {
-                stickyRight = Math.max(stickyRight, cell.getBoundingClientRect().right - scrollerLeft);
-            }
-            writeRootVar(X_HEAD_HEIGHT_VAR, `${head.getBoundingClientRect().height}px`);
-            writeRootVar(X_STICKY_LEFT_VAR, `${stickyRight}px`);
-        };
+        // 読み取りを先にまとめ、書き込みは後にまとめる(読み書きを交互にすると、そのたびに配置を計算し直す)
         const measure = () => {
-            offset = probe.getBoundingClientRect().height;
-            scrollWidth = scroller.scrollWidth;
-            clientWidth = scroller.clientWidth;
-            proxyContent.style.width = `${scrollWidth}px`;
-            writeHeadMetrics();
-            updateHiddenSides();
+            const nextOffset = probe.getBoundingClientRect().height;
+            const nextScrollWidth = scroller.scrollWidth;
+            const nextClientWidth = scroller.clientWidth;
+            const scrollLeft = scroller.scrollLeft;
+            const headHeight = head?.getBoundingClientRect().height;
+            // 固定は左から詰めて並べる前提で、いちばん右の固定セルの右端を採る
+            let stickyRight = 0;
+            if (stickyCells.length > 0) {
+                const scrollerLeft = scroller.getBoundingClientRect().left;
+                for (const cell of stickyCells) {
+                    stickyRight = Math.max(stickyRight, cell.getBoundingClientRect().right - scrollerLeft);
+                }
+            }
+            offset = nextOffset;
+            scrollWidth = nextScrollWidth;
+            clientWidth = nextClientWidth;
+            proxyContent.style.width = `${nextScrollWidth}px`;
+            if (headHeight !== undefined) {
+                writeRootVar(X_HEAD_HEIGHT_VAR, `${headHeight}px`);
+                writeRootVar(X_STICKY_LEFT_VAR, `${stickyRight}px`);
+            }
+            updateHiddenSides(scrollLeft);
             scheduleShift();
         };
-        // 中身の差し替え(読み込み中の表示 ⇄ 表、行の増減)で見出しが入れ替わったときだけ観測先を付け直す。
-        // 観測するのは枠と表まわりだけ(ページ全体を見張らない)
+        // 大きさを見張るのは貼り付け位置の箱・枠・表だけ(外枠はこの 3 つで足りる)。画面の幅の変化も枠の大きさの変化として届く
         const resizeObserver = new ResizeObserver(measure);
+        resizeObserver.observe(probe);
+        resizeObserver.observe(scroller);
+        // 表・見出し行の差し替え(読み込み中の表示 ⇄ 表、見出しの作り直し)は、枠と表の直下の子の出し入れだけで見張る。
+        // 行の増減は表の大きさの変化として ResizeObserver に届く
+        let mutationObserver;
+        const watchChildren = () => {
+            if (!mutationObserver)
+                return;
+            mutationObserver.disconnect();
+            mutationObserver.observe(scroller, { childList: true });
+            if (table)
+                mutationObserver.observe(table, { childList: true });
+        };
         const observeTargets = () => {
-            const nextHead = scroller.querySelector("thead");
-            if (nextHead === head && head !== null)
+            const nextTable = scroller.querySelector("table");
+            if (nextTable !== table) {
+                if (table)
+                    resizeObserver.unobserve(table);
+                table = nextTable;
+                if (table)
+                    resizeObserver.observe(table);
+                watchChildren();
+            }
+            const nextHead = table?.querySelector("thead") ?? null;
+            if (nextHead === head)
                 return;
             head = nextHead;
             // 新しい見出し行にはずらす量がまだ書かれていない
             shift = 0;
             head?.style.setProperty(X_HEAD_SHIFT_VAR, "0px");
             stickyCells = Array.from(head?.querySelector("tr")?.children ?? []).filter((cell) => getComputedStyle(cell).position === "sticky");
-            resizeObserver.disconnect();
-            for (const el of [root, probe, scroller, scroller.firstElementChild, head?.parentElement]) {
-                if (el)
-                    resizeObserver.observe(el);
-            }
         };
         observeTargets();
-        const mutationObserver = new MutationObserver(observeTargets);
-        mutationObserver.observe(scroller, { childList: true, subtree: true });
+        mutationObserver = new MutationObserver(() => {
+            observeTargets();
+            measure();
+        });
+        watchChildren();
         // 同じ値の代入では scroll が発火しないので、互いに呼び合って止まらなくなることはない
         const syncScrollLeft = (from, to) => () => {
             if (Math.abs(to.scrollLeft - from.scrollLeft) >= 1)
@@ -142,7 +164,7 @@ export function useStickyHeadInXScroller() {
         };
         const syncFromScroller = syncScrollLeft(scroller, proxy);
         const onScrollerScroll = () => {
-            updateHiddenSides();
+            updateHiddenSides(scroller.scrollLeft);
             syncFromScroller();
         };
         const syncFromProxy = syncScrollLeft(proxy, scroller);
@@ -154,7 +176,7 @@ export function useStickyHeadInXScroller() {
             if (frame !== 0)
                 cancelAnimationFrame(frame);
             resizeObserver.disconnect();
-            mutationObserver.disconnect();
+            mutationObserver?.disconnect();
             scroller.removeEventListener("scroll", onScrollerScroll);
             proxy.removeEventListener("scroll", syncFromProxy);
             window.removeEventListener("scroll", scheduleShift);

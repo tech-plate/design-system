@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore, type ReactNode } from "react";
+import { cx, Icon, XIcon } from "./internal.js";
 import { useStickyHeadInXScroller, type HiddenSides } from "./use-sticky-head-in-x-scroller.js";
 
 /** 幅の広い表の枠（docs/layout.md §7-1） */
@@ -34,6 +35,7 @@ const SHADOW_SIDE_CLASS = {
   right: "right-0 bg-linear-to-l",
 } as const;
 const SIDES = ["left", "right"] as const;
+const SHADOW_CLASS = "pointer-events-none absolute inset-y-0 z-30 w-6 from-foreground/10 to-transparent";
 
 /**
  * 案内を置く高さ。重ねる箱の上余白（表が画面に収まっているとき）と、表が縦に長いときに止まる位置の両方を
@@ -52,72 +54,66 @@ const HINT_CLOSE_CLASS =
 export const X_SCROLL_HINT_DISMISSED_KEY = "tech-plate-design-system:x-scroll-hint-dismissed";
 
 // 閉じた状態は画面内の全部の表で共有する（片方で閉じたらもう片方も消す）。別タブで閉じたら storage イベントで追う。
-// localStorage は描画のたびには読まず、最初の購読・storage イベント・閉じたときだけ読む
+// localStorage は描画のたびには読まず、表を出して最初の getSnapshot（閉じた人に 1 フレームも出さないよう、描く前に読む）と
+// storage イベントのときだけ読む。localStorage が使えない環境（プライベートブラウズ等）では、表を出している間だけ閉じる
 const hintListeners = new Set<() => void>();
-/** localStorage が使えない環境（プライベートブラウズ等）では、ページを開いている間だけ閉じる */
-let dismissedWithoutStorage = false;
-let hintDismissed = false;
+let hintDismissed: boolean | undefined;
 
-function readHintDismissed() {
+function readHintDismissed(): boolean {
   try {
-    hintDismissed = window.localStorage.getItem(X_SCROLL_HINT_DISMISSED_KEY) !== null;
+    return window.localStorage.getItem(X_SCROLL_HINT_DISMISSED_KEY) !== null;
   } catch {
-    hintDismissed = dismissedWithoutStorage;
+    return false;
   }
+}
+function getHintDismissed(): boolean {
+  hintDismissed ??= readHintDismissed();
+  return hintDismissed;
 }
 function notifyHint() {
   for (const listener of hintListeners) listener();
 }
-function onStorage() {
-  readHintDismissed();
+function onStorage(event: StorageEvent) {
+  // localStorage.clear() は key が null で届く
+  if (event.key !== null && event.key !== X_SCROLL_HINT_DISMISSED_KEY) return;
+  hintDismissed = readHintDismissed();
   notifyHint();
 }
 function subscribeHint(listener: () => void) {
-  if (hintListeners.size === 0) {
-    readHintDismissed();
-    window.addEventListener("storage", onStorage);
-  }
+  if (hintListeners.size === 0) window.addEventListener("storage", onStorage);
   hintListeners.add(listener);
   return () => {
     hintListeners.delete(listener);
-    if (hintListeners.size === 0) window.removeEventListener("storage", onStorage);
+    if (hintListeners.size > 0) return;
+    window.removeEventListener("storage", onStorage);
+    // 表が 1 つも無い間の別タブの変化は追えないので、次に表を出すときに読み直す
+    hintDismissed = undefined;
   };
 }
 function dismissHint() {
+  hintDismissed = true;
   try {
     window.localStorage.setItem(X_SCROLL_HINT_DISMISSED_KEY, "1");
   } catch {
-    dismissedWithoutStorage = true;
+    // 覚えられなくても、このページを開いている間は閉じたまま
   }
-  readHintDismissed();
   notifyHint();
 }
 
-/** ホイールの線が縦に流れるマウスの絵。出るたびに 3 回流して止める（animate-wheel-scroll は tailwind-v4.css。reduced-motion では動かさない） */
+/** ホイールの線が縦に流れるマウスの絵。出るたびに 3 回流して止める（animate-tp-wheel-scroll は tailwind-v4.css。reduced-motion では動かさない） */
 function WheelMouseIcon() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-      className="size-5 shrink-0 text-icon-strong"
-    >
+    <Icon className="size-5 shrink-0 text-icon-strong">
       <rect x="5" y="2" width="14" height="20" rx="7" />
-      <path d="M12 6v4" className="animate-wheel-scroll motion-reduce:animate-none" />
-    </svg>
+      <path d="M12 6v4" className="animate-tp-wheel-scroll motion-reduce:animate-none" />
+    </Icon>
   );
 }
 
 /** 「Shift＋マウスホイールで横に移動」の案内。閉じる（×）まで出し続ける。表の中の右端、見出し行の下に浮かせる */
 function XScrollHint() {
   // サーバでは閉じた扱い（出さない）。この部品ははみ出しを測った後にしか描かないので食い違わない
-  const dismissed = useSyncExternalStore(subscribeHint, () => hintDismissed, () => true);
+  const dismissed = useSyncExternalStore(subscribeHint, getHintDismissed, () => true);
   if (dismissed) return null;
   return (
     <div className={HINT_BOX_CLASS}>
@@ -125,21 +121,7 @@ function XScrollHint() {
         <WheelMouseIcon />
         Shift＋マウスホイールで横に移動
         <button type="button" aria-label="横スクロールの案内を閉じる" className={HINT_CLOSE_CLASS} onClick={dismissHint}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            focusable="false"
-            className="size-4"
-          >
-            <path d="M18 6 6 18" />
-            <path d="m6 6 12 12" />
-          </svg>
+          <XIcon className="size-4" />
         </button>
       </p>
     </div>
@@ -154,7 +136,7 @@ function XScrollShadows({ sides }: { sides: HiddenSides }) {
         key={side}
         aria-hidden="true"
         data-scroll-shadow={side}
-        className={`pointer-events-none absolute inset-y-0 z-30 w-6 from-foreground/10 to-transparent ${SHADOW_SIDE_CLASS[side]}`}
+        className={cx(SHADOW_CLASS, SHADOW_SIDE_CLASS[side])}
       />
     ) : null,
   );
@@ -180,7 +162,7 @@ export function ScrollableTableContainer({ label, className, children }: Scrolla
   const { rootRef, scrollerRef, proxyRef, probeRef, hiddenSides } = useStickyHeadInXScroller();
   const overflowing = hiddenSides.left || hiddenSides.right;
   return (
-    <div ref={rootRef} className={className ? `${ROOT_CLASS} ${className}` : ROOT_CLASS}>
+    <div ref={rootRef} className={cx(ROOT_CLASS, className)}>
       {/* 見出し行を止める位置（上端の帯の高さ）を px で読むための箱 */}
       <div
         ref={probeRef}

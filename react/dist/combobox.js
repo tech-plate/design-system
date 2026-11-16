@@ -2,6 +2,7 @@
 import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { createContext, Fragment, memo, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, } from "react";
 import { createPortal } from "react-dom";
+import { cx, Icon, XIcon } from "./internal.js";
 import { matchRangeNormalized, normalizeForMatch, normalizeQuery } from "./normalize.js";
 const SEARCH_DEBOUNCE_MS = 300;
 /** 件数の読み上げは絞り込みが止まってから */
@@ -15,7 +16,6 @@ const MUTED_NOTE_CLASS = "flex min-h-11 items-center px-3 py-2 text-sm text-mute
 const ERROR_NOTE_CLASS = "flex min-h-11 items-center px-3 py-2 text-sm text-destructive-text";
 const SEARCH_FAILED_MESSAGE = "候補を読み込めませんでした。時間をおいてもう一度入力してください";
 const CREATE_FAILED_MESSAGE = "追加できませんでした。時間をおいてもう一度押してください";
-const cx = (...classes) => classes.filter(Boolean).join(" ");
 const EMPTY_INDEXED = [];
 const indexOptions = (options) => options.map((option) => ({
     option,
@@ -54,12 +54,8 @@ function handleEscape(event, close) {
     close();
     return true;
 }
-function Icon({ children, ...props }) {
-    return (_jsx("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true", focusable: "false", ...props, children: children }));
-}
 const ChevronDownIcon = ({ className }) => (_jsx(Icon, { className: className, children: _jsx("path", { d: "m6 9 6 6 6-6" }) }));
 const CheckIcon = ({ className }) => (_jsx(Icon, { className: className, children: _jsx("path", { d: "M20 6 9 17l-5-5" }) }));
-const XIcon = ({ className }) => (_jsxs(Icon, { className: className, children: [_jsx("path", { d: "M18 6 6 18" }), _jsx("path", { d: "m6 6 12 12" })] }));
 /** 一致した部分を font-semibold にする。query はそろえ済みのもの */
 const Highlighted = memo(function Highlighted({ label, query }) {
     const range = matchRangeNormalized(label, query);

@@ -245,7 +245,7 @@ import { ScrollableTableContainer } from "@tech-plate/design-system/react";
 - **見出しのセルに上の罫線を付けない**（部品が `border-t-0` にする。外周の線は入れ物が引く）。先頭の列は `sticky left-0` で固定できる（左の影は固定列の右から出る）。
 - **枠の祖先に `overflow-hidden` / `overflow-x-auto` を置かない。** 下端の代わりのバー（`sticky bottom-0`）が画面に貼り付かなくなる。
 - 案内を閉じたことは `localStorage` のキー `X_SCROLL_HINT_DISMISSED_KEY`（export している）に覚える。指で操作する端末（`pointer: coarse`）では案内を出さない。
-- ホイールの線の動き（`animate-wheel-scroll`）の keyframes は `tailwind-v4.css` に入っている。プロダクト側の CSS は要らない。
+- ホイールの線の動き（`animate-tp-wheel-scroll`）の keyframes は `tailwind-v4.css` に入っている。プロダクト側の CSS は要らない。
 
 ## JS / TS からトークン値を参照する
 

@@ -151,9 +151,23 @@ describe("ScrollableTableContainer: 枠", () => {
     expect(probe.getAttribute("aria-hidden")).toBe("true");
   });
 
-  it("大きさを見張るのは枠・表まわりだけ", () => {
-    const { root, probe, scroller, table } = renderContainer();
-    expect(new Set(observed)).toEqual(new Set([root, probe, scroller, table]));
+  it("大きさを見張るのは貼り付け位置の箱・枠・表だけ（外枠は見張らない）", () => {
+    const { probe, scroller, table } = renderContainer();
+    expect(new Set(observed)).toEqual(new Set([probe, scroller, table]));
+  });
+
+  it("表が差し替わったら、新しい表を見張り、その見出し行にずらし量を書く", async () => {
+    const { probe, scroller, table } = renderContainer();
+    vi.spyOn(probe, "getBoundingClientRect").mockReturnValue(rect({ height: 64 }));
+    const nextTable = document.createElement("table");
+    nextTable.innerHTML = "<thead><tr><th>別の表</th></tr></thead><tbody><tr><td>行</td></tr></tbody>";
+    const nextHead = nextTable.querySelector("thead")!;
+    vi.spyOn(nextHead, "getBoundingClientRect").mockReturnValue(rect({ top: 0, height: 40 }));
+    vi.spyOn(nextTable, "getBoundingClientRect").mockReturnValue(rect({ bottom: 1000 }));
+    scroller.replaceChild(nextTable, table);
+    await act(() => Promise.resolve());
+    expect(observed).toContain(nextTable);
+    expect(nextHead.style.getPropertyValue("--x-head-shift")).toBe("64px");
   });
 });
 
@@ -193,9 +207,8 @@ describe("ScrollableTableContainer: 見出し行を画面の縦スクロール�
     vi.spyOn(nextHead, "getBoundingClientRect").mockReturnValue(rect({ top: 0, height: 40 }));
     vi.spyOn(table, "getBoundingClientRect").mockReturnValue(rect({ bottom: 1000 }));
     table.replaceChild(nextHead, table.querySelector("thead")!);
-    // MutationObserver はマイクロタスクで呼ばれる。観測先を付け直した後の測り直しは ResizeObserver から来る
+    // MutationObserver（表の直下の子の出し入れ）はマイクロタスクで呼ばれ、付け直した後に測り直す
     await act(() => Promise.resolve());
-    remeasure();
     expect(scroller.querySelector("thead")).toBe(nextHead);
     expect(nextHead.style.getPropertyValue("--x-head-shift")).toBe("64px");
   });
@@ -304,8 +317,24 @@ describe("ScrollableTableContainer: Shift＋マウスホイールの案内", () 
     const { root, scroller } = renderContainer();
     overflow(scroller);
     const line = hint(root)!.querySelector("path")!;
-    expect(line.getAttribute("class")).toContain("animate-wheel-scroll");
+    expect(line.getAttribute("class")).toContain("animate-tp-wheel-scroll");
     expect(line.getAttribute("class")).toContain("motion-reduce:animate-none");
+  });
+
+  it("前に閉じていれば、はみ出した最初の描画から出さない（一瞬も出さない）", () => {
+    window.localStorage.setItem(X_SCROLL_HINT_DISMISSED_KEY, "1");
+    // 足されて直後に外された要素も記録に残る
+    const watcher = new MutationObserver(() => {});
+    watcher.observe(document.body, { childList: true, subtree: true });
+    const { root, scroller } = renderContainer();
+    overflow(scroller);
+    const added = watcher
+      .takeRecords()
+      .flatMap((record) => Array.from(record.addedNodes))
+      .filter((node): node is Element => node instanceof Element);
+    watcher.disconnect();
+    expect(added.some((node) => node.matches("[data-scroll-hint], :has([data-scroll-hint])"))).toBe(false);
+    expect(hint(root)).toBeNull();
   });
 
   it("× で閉じたら localStorage に覚え、そのブラウザでは以後出さない", () => {
