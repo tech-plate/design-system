@@ -2,20 +2,20 @@
 import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { createContext, Fragment, memo, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, } from "react";
 import { createPortal } from "react-dom";
+import { cx, SPINNER_CLASS } from "./classes.js";
 import { matchRangeNormalized, normalizeForMatch, normalizeQuery } from "./normalize.js";
+import { lockBodyScroll } from "./scroll-lock.js";
 const SEARCH_DEBOUNCE_MS = 300;
 /** 件数の読み上げは絞り込みが止まってから */
 const STATUS_DELAY_MS = 500;
 const MD_QUERY = "(min-width: 48rem)";
 const EMPTY_OPTIONS = [];
 const INPUT_CLASS = "min-h-11 w-full rounded-md border border-input bg-card px-3 py-2 text-base text-foreground transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:ring-destructive";
-const SPINNER_SM_CLASS = "inline-block size-4 shrink-0 animate-spin motion-reduce:animate-none rounded-full border-2 border-current border-t-transparent";
 const OPTION_CLASS = "flex min-h-11 cursor-pointer items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-foreground/5 data-[active=true]:bg-foreground/5 aria-disabled:cursor-not-allowed aria-disabled:opacity-60 aria-disabled:hover:bg-transparent";
 const MUTED_NOTE_CLASS = "flex min-h-11 items-center px-3 py-2 text-sm text-muted-foreground";
 const ERROR_NOTE_CLASS = "flex min-h-11 items-center px-3 py-2 text-sm text-destructive-text";
 const SEARCH_FAILED_MESSAGE = "候補を読み込めませんでした。時間をおいてもう一度入力してください";
 const CREATE_FAILED_MESSAGE = "追加できませんでした。時間をおいてもう一度押してください";
-const cx = (...classes) => classes.filter(Boolean).join(" ");
 const EMPTY_INDEXED = [];
 const indexOptions = (options) => options.map((option) => ({
     option,
@@ -31,19 +31,6 @@ function useIsDesktop() {
         media.addEventListener("change", onChange);
         return () => media.removeEventListener("change", onChange);
     }, () => getMediaQuery().matches, () => true);
-}
-// 背景のスクロール停止は参照カウント（docs/components.md §7-2）
-let scrollLockCount = 0;
-let savedOverflow = "";
-function lockBodyScroll() {
-    if (scrollLockCount++ === 0) {
-        savedOverflow = document.body.style.overflow;
-        document.body.style.overflow = "hidden";
-    }
-    return () => {
-        if (--scrollLockCount === 0)
-            document.body.style.overflow = savedOverflow;
-    };
 }
 /** Esc（IME の変換中を除く）なら外へ伝えずに close して true */
 function handleEscape(event, close) {
@@ -353,7 +340,7 @@ export function Combobox({ id, label, name, value, onValueChange, options = EMPT
         return `「${trimmed}」に一致する${noun}がありません`;
     };
     const message = emptyMessage();
-    const listContent = (labelledBy) => (_jsxs(_Fragment, { children: [loading && (_jsx("div", { className: "flex min-h-11 items-center px-3 text-muted-foreground", children: _jsx("span", { className: SPINNER_SM_CLASS, "aria-hidden": "true" }) })), message && _jsx("p", { className: searchFailed ? ERROR_NOTE_CLASS : MUTED_NOTE_CLASS, children: message }), _jsx("div", { role: "listbox", id: listboxId, "aria-labelledby": labelledBy, children: entries.map((entry, index) => entry.kind === "option" ? (_jsxs(OptionRow, { id: optionId(index), active: index === activeIndex, selected: entry.option.value === value, disabled: entry.option.disabled ?? false, onActivate: () => activate(entry), children: [_jsx("span", { className: "min-w-0 flex-1 break-words", children: _jsx(Highlighted, { label: entry.option.label, query: normalizedQuery }) }), entry.option.value === value && _jsx(CheckIcon, { className: "size-4 shrink-0" })] }, entry.option.value)) : (_jsxs(Fragment, { children: [_jsx("div", { "aria-hidden": "true", className: "my-1 border-t border-border" }), _jsxs(OptionRow, { id: optionId(index), active: index === activeIndex, selected: false, disabled: creating, onActivate: () => activate(entry), children: [creating && _jsx("span", { className: SPINNER_SM_CLASS, "aria-hidden": "true" }), _jsxs("span", { className: "min-w-0 flex-1 break-words", children: ["\u300C", trimmed, "\u300D\u3092\u8FFD\u52A0\u3059\u308B"] })] })] }, "create"))) }), createFailed && _jsx("p", { className: ERROR_NOTE_CLASS, children: CREATE_FAILED_MESSAGE })] }));
+    const listContent = (labelledBy) => (_jsxs(_Fragment, { children: [loading && (_jsx("div", { className: "flex min-h-11 items-center px-3 text-muted-foreground", children: _jsx("span", { className: SPINNER_CLASS, "aria-hidden": "true" }) })), message && _jsx("p", { className: searchFailed ? ERROR_NOTE_CLASS : MUTED_NOTE_CLASS, children: message }), _jsx("div", { role: "listbox", id: listboxId, "aria-labelledby": labelledBy, children: entries.map((entry, index) => entry.kind === "option" ? (_jsxs(OptionRow, { id: optionId(index), active: index === activeIndex, selected: entry.option.value === value, disabled: entry.option.disabled ?? false, onActivate: () => activate(entry), children: [_jsx("span", { className: "min-w-0 flex-1 break-words", children: _jsx(Highlighted, { label: entry.option.label, query: normalizedQuery }) }), entry.option.value === value && _jsx(CheckIcon, { className: "size-4 shrink-0" })] }, entry.option.value)) : (_jsxs(Fragment, { children: [_jsx("div", { "aria-hidden": "true", className: "my-1 border-t border-border" }), _jsxs(OptionRow, { id: optionId(index), active: index === activeIndex, selected: false, disabled: creating, onActivate: () => activate(entry), children: [creating && _jsx("span", { className: SPINNER_CLASS, "aria-hidden": "true" }), _jsxs("span", { className: "min-w-0 flex-1 break-words", children: ["\u300C", trimmed, "\u300D\u3092\u8FFD\u52A0\u3059\u308B"] })] })] }, "create"))) }), createFailed && _jsx("p", { className: ERROR_NOTE_CLASS, children: CREATE_FAILED_MESSAGE })] }));
     /** md 以上の入力欄とシートの検索欄で共通の属性 */
     const comboboxInputProps = {
         type: "text",

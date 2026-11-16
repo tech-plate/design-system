@@ -19,3 +19,14 @@ window.matchMedia = (query) => {
 };
 
 Element.prototype.scrollIntoView = () => {};
+
+// <dialog> の showModal / close: jsdom は open 属性しか持たない。top layer・inert・Esc の閉じ要求は再現しないので、
+// 開閉と close イベント（ブラウザと同じく後から非同期で届く）だけを補う
+HTMLDialogElement.prototype.showModal = function () {
+  this.open = true;
+};
+HTMLDialogElement.prototype.close = function () {
+  if (!this.open) return;
+  this.open = false;
+  setTimeout(() => this.dispatchEvent(new Event("close")), 0);
+};

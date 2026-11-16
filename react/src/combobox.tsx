@@ -18,7 +18,9 @@ import {
   type SVGProps,
 } from "react";
 import { createPortal } from "react-dom";
+import { cx, SPINNER_CLASS } from "./classes.js";
 import { matchRangeNormalized, normalizeForMatch, normalizeQuery, type ComboboxOption } from "./normalize.js";
+import { lockBodyScroll } from "./scroll-lock.js";
 
 /** 検索つきの Combobox（1 つだけ選ぶ）。仕様は docs/forms.md §8-3 */
 export type ComboboxProps = {
@@ -65,8 +67,6 @@ const EMPTY_OPTIONS: ComboboxOption[] = [];
 
 const INPUT_CLASS =
   "min-h-11 w-full rounded-md border border-input bg-card px-3 py-2 text-base text-foreground transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:ring-destructive";
-const SPINNER_SM_CLASS =
-  "inline-block size-4 shrink-0 animate-spin motion-reduce:animate-none rounded-full border-2 border-current border-t-transparent";
 const OPTION_CLASS =
   "flex min-h-11 cursor-pointer items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-foreground/5 data-[active=true]:bg-foreground/5 aria-disabled:cursor-not-allowed aria-disabled:opacity-60 aria-disabled:hover:bg-transparent";
 const MUTED_NOTE_CLASS = "flex min-h-11 items-center px-3 py-2 text-sm text-muted-foreground";
@@ -74,8 +74,6 @@ const ERROR_NOTE_CLASS = "flex min-h-11 items-center px-3 py-2 text-sm text-dest
 
 const SEARCH_FAILED_MESSAGE = "候補を読み込めませんでした。時間をおいてもう一度入力してください";
 const CREATE_FAILED_MESSAGE = "追加できませんでした。時間をおいてもう一度押してください";
-
-const cx = (...classes: (string | false | undefined)[]) => classes.filter(Boolean).join(" ");
 
 /** 照合用にそろえた名前・読みを持たせた候補 */
 type IndexedOption = { option: ComboboxOption; label: string; reading?: string };
@@ -102,19 +100,6 @@ function useIsDesktop(): boolean {
     () => getMediaQuery().matches,
     () => true,
   );
-}
-
-// 背景のスクロール停止は参照カウント（docs/components.md §7-2）
-let scrollLockCount = 0;
-let savedOverflow = "";
-function lockBodyScroll(): () => void {
-  if (scrollLockCount++ === 0) {
-    savedOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-  }
-  return () => {
-    if (--scrollLockCount === 0) document.body.style.overflow = savedOverflow;
-  };
 }
 
 /** Esc（IME の変換中を除く）なら外へ伝えずに close して true */
@@ -525,7 +510,7 @@ export function Combobox({
     <>
       {loading && (
         <div className="flex min-h-11 items-center px-3 text-muted-foreground">
-          <span className={SPINNER_SM_CLASS} aria-hidden="true" />
+          <span className={SPINNER_CLASS} aria-hidden="true" />
         </div>
       )}
       {message && <p className={searchFailed ? ERROR_NOTE_CLASS : MUTED_NOTE_CLASS}>{message}</p>}
@@ -555,7 +540,7 @@ export function Combobox({
                 disabled={creating}
                 onActivate={() => activate(entry)}
               >
-                {creating && <span className={SPINNER_SM_CLASS} aria-hidden="true" />}
+                {creating && <span className={SPINNER_CLASS} aria-hidden="true" />}
                 <span className="min-w-0 flex-1 break-words">「{trimmed}」を追加する</span>
               </OptionRow>
             </Fragment>

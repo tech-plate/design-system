@@ -13,7 +13,7 @@
 - **React コンポーネントは原則配布しない（shadcn registry も配布しない）。** 実装は各プロダクトが持ち、
   ここでは [docs/components.md](./docs/components.md) に「ルール」だけを置く。
   例外は、振る舞いが複雑でプロダクトごとに作るとずれやすい部品だけで、`@tech-plate/design-system/react` から配る
-  （今は `Combobox` だけ。下の「React の部品」）。
+  （今は `Combobox` と `ConfirmDialog` / `ConfirmActions`。下の「React の部品」）。
 
 ## ドキュメント
 
@@ -36,11 +36,11 @@
 npm レジストリ（public）から入れる。**`^0.x` で範囲を指定し、上げるときは差分（トークン値・docs）を読んでから上げる。**
 
 ```bash
-pnpm add @tech-plate/design-system@^0.11.0
+pnpm add @tech-plate/design-system@^0.12.0
 ```
 
-0.x の間は、`^0.11.0` は 0.11.x だけを受け入れる（0.12.0 には自動で上がらない）。
-トークンの値や docs のルールが変わるのはマイナー（0.11 → 0.12）なので、上げるときに消費側で見た目とコントラストを確かめる。
+0.x の間は、`^0.12.0` は 0.12.x だけを受け入れる（0.13.0 には自動で上がらない）。
+トークンの値や docs のルールが変わるのはマイナー（0.12 → 0.13）なので、上げるときに消費側で見た目とコントラストを確かめる。
 
 生成物（`tokens/tokens.css` `tokens/index.mjs` `tokens/index.d.ts` `tailwind/preset.js` `tailwind/v4.css`、React の部品の `react/dist`）は
 **パッケージに同梱済み**なので、インストール時にビルドは走らない。ランタイム依存はゼロ（React の部品を使うときだけ、peerDependencies の `react` / `react-dom` 19 以上が要る）。
@@ -167,7 +167,7 @@ Tailwind v4 は `@theme` の変数を `:root` に出すので、消費側が `:r
 
 ## React の部品（`@tech-plate/design-system/react`）
 
-docs の規定どおりに作った部品を配る。今あるのは `Combobox`（[docs/forms.md](./docs/forms.md) §8-3）だけ。
+docs の規定どおりに作った部品を配る。今あるのは `Combobox`（[docs/forms.md](./docs/forms.md) §8-3）と、確認ダイアログの `ConfirmDialog` / `ConfirmActions`（[docs/components.md](./docs/components.md) §7-4。下の「確認ダイアログ」）。
 
 ```tsx
 import { Combobox } from "@tech-plate/design-system/react";
@@ -203,7 +203,7 @@ const found = staff.filter((s) => matchesOption(s, query)); // 部分一致。�
 // DB で検索するなら、保存する側の列を normalizeForMatch で、入力を normalizeQuery でそろえて比べる
 ```
 
-### モーダルの中で使う
+### Combobox をモーダルの中で使う
 
 一覧（`md` 以上）とシート（`md` 未満）は既定で `document.body` に portal で出す。
 フォーカスを閉じ込めるモーダル（Radix の Dialog など）は箱の外を「外側」とみなし、そこへの押す・打つ・スクロールを止めるので、
@@ -223,6 +223,61 @@ const [box, setBox] = useState<HTMLDivElement | null>(null);
 
 - **渡す要素とその祖先に CSS の `transform` を付けない。** 一覧は `position: fixed` で入力欄の下に置くので、transform のある祖先があるとそこが基準になり、位置がずれる（`translate-x-[-50%]` などで中央に寄せる箱がこれに当たる。flex / grid で中央に寄せる）。
 - **Esc:** 一覧が開いているときの Esc は部品が `stopPropagation` して外へ伝えない（一覧だけを閉じる）。ただし document に capture で Esc を受けるモーダル（Radix の DismissableLayer など）には部品より先に届くので、モーダル側で `event.target` が `[role=combobox][aria-expanded=true]` のときは閉じないようにする（Radix なら `onEscapeKeyDown` で `event.preventDefault()`）。
+
+
+### 確認ダイアログ（`ConfirmDialog` / `ConfirmActions`）
+
+[docs/components.md](./docs/components.md) §7-1・§7-4 の確認ダイアログ。`window.confirm()` の代わりに使う。
+
+```tsx
+import { ConfirmDialog } from "@tech-plate/design-system/react";
+
+const [target, setTarget] = useState<Row | null>(null);
+
+<ConfirmDialog
+  open={target !== null}
+  title={`「${target?.name}」を削除しますか？`}   // 問いの形
+  description="削除すると元に戻せません。"        // 何が起きるか・元に戻せるか（任意）
+  confirmLabel="削除する"                        // 動詞。「OK」「はい」にしない
+  destructive                                   // 元に戻せない操作: 実行（destructive）が左・キャンセルが右
+  onConfirm={async () => {                      // 返した Promise の間は実行中（両方のボタンを押せない）
+    await deleteRow(target!.id);
+    setTarget(null);                            // 閉じるのは呼ぶ側
+  }}
+  onCancel={() => setTarget(null)}              // キャンセルのボタンだけが呼ぶ（Esc・背景のクリックでは呼ばない）
+/>
+```
+
+**配る理由**（上の「原則配布しない」の例外に当たる理由）: 見た目は仕様表で揃うが、振る舞いの約束が多く、プロダクトごとに作るとずれていた。
+並び（破壊的だけ実行が左）と DOM の順、初期フォーカス（破壊的でもキャンセル）、Esc・背景で閉じない、実行中の二重送信の防止、
+フォーカスの閉じ込めと戻し、入れ子のモーダルの中での Esc と暗幕。どれも 1 つ抜けると「開いた直後の Enter で削除された」
+「Esc で外側のモーダルまで閉じた」のような事故になり、しかも画面を見ただけでは気づけない。
+
+- **ネイティブの `<dialog>` を `showModal()` で開く。** top layer に出るので z-index（[docs/layout.md](./docs/layout.md) §4 の確認ダイアログの層）を持たず、祖先の `transform` や `overflow` にも左右されない。背面は inert になり（押せない・フォーカスが入らない）、Tab は中だけを回る。背景のスクロールは html と body の両方を参照カウントで止める（Combobox のシートとカウンタを共有するので、入れ子で開閉しても残らない）。
+- **閉じ方:** Esc・背景のクリック・ブラウザの閉じ要求（Android の戻るなど）では閉じない（止められずに閉じたときは開き直す）。閉じたら開く前にフォーカスのあった要素へ戻す（その要素が消えていれば戻さないので、[docs/a11y.md](./docs/a11y.md) §5-2 の戻し先は呼ぶ側で当てる）。
+- **`onConfirm` の失敗は中で扱う**（エラーを出す・閉じるかを決める）。投げると開いたまま実行中が解け、未処理の rejection になる。
+- **別のモーダルの中から開くときは、外側のモーダルの箱の中（JSX の子）に置き、`nested` を付ける**（暗幕が `bg-overlay/25` になる）。
+  - **Esc:** 開いている間の Esc は、部品が window の capture で `preventDefault` と `stopPropagation` をするので、外側のモーダルの Esc の処理（document の capture で受ける Radix の DismissableLayer、window・document の bubble で受ける自前の処理）には届かない。届くのは、部品より先に window へ capture で登録したものだけで、その場合も `event.defaultPrevented` が `true` なので、外側はそれを見て何もしない。
+  - **置き場所:** 外側が Radix の Dialog のように「箱の外」への押下で閉じる・body を `pointer-events: none` にするモーダルだと、箱の外（兄弟）に置いた確認ダイアログは押せないか、押すと外側が閉じる。箱の中に置けば DOM の上でも箱の中なので、どちらも起きない（top layer に出るので見た目は箱に縛られない）。
+- **トーストは確認ダイアログの下になる。** top layer より上には z-index で出せないので、実行中に出したトースト（[docs/layout.md](./docs/layout.md) §4 の 400）は暗幕の下に見え、押せない。失敗はトーストではなくダイアログを閉じてから出すか、閉じずに出すならダイアログの説明に出す。
+
+入力欄を持つダイアログ（理由を入れて取り消すなど。確認ダイアログではなく Modal。§7-1）のフッターには、ボタン行だけの `ConfirmActions` を使う。
+並びと初期フォーカスの約束は同じで、幅に関係なく均等幅の 2 列（§2-3 のダイアログの扱い）。
+
+```tsx
+import { ConfirmActions } from "@tech-plate/design-system/react";
+
+<ConfirmActions
+  className="mt-6"                // 行に足すクラス（本文との間）
+  destructive
+  confirmLabel="非承認にする"
+  onConfirm={reject}
+  onCancel={close}
+  busy={rejecting}                // 実行のボタンにスピナー、両方を押せない
+  confirmDisabled={!reason}       // 実行だけを押せない（必須の入力がまだ）
+  autoFocusCancel={false}         // 入力欄に初期フォーカスを当てるときだけ false（既定はキャンセルに当てる）
+/>
+```
 
 
 ## JS / TS からトークン値を参照する
